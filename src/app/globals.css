@@ -1,9 +1,10 @@
-@import "tailwindcss";
-@import "./font.css";
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
 
 :root {
   --primary: 214, 198, 56;
-  --primary-hls: 54, 66%, 53%;
+  --primary-hover: 192, 178, 50;
 }
 
 body {
