@@ -28,9 +28,12 @@ export default function ClientDashboard() {
             },
           }
         );
+
         const data = await response.json();
-        setHasTrainer(!!data.trainerId);
-        if (!data.trainerId) {
+
+        // Mostra il modale solo se non c'è un trainer, non ci sono richieste pendenti 
+        // e non c'è un collegamento attivo
+        if (!data.trainerId && !data.hasPendingRequest && !data.hasActiveConnection) {
           setShowTrainerModal(true);
         }
       } catch (error) {

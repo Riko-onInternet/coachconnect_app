@@ -1,4 +1,6 @@
 import { useState, useEffect } from "react";
+import { io } from "socket.io-client";
+import { getUserId } from "@/utils/auth"; // Aggiungi questa importazione
 
 interface Chat {
   id: string;
@@ -7,6 +9,7 @@ interface Chat {
   lastMessage: string;
   lastMessageTime: string;
   unreadCount: number;
+  hasMessages: boolean; // Aggiungi questa proprietà
 }
 
 interface Message {
@@ -22,6 +25,7 @@ export default function Messages() {
   const [messages, setMessages] = useState<Message[]>([]);
   const [newMessage, setNewMessage] = useState("");
   const [loading, setLoading] = useState(true);
+  const [socket, setSocket] = useState<any>(null);
 
   useEffect(() => {
     const fetchChats = async () => {
@@ -83,30 +87,75 @@ export default function Messages() {
     }
   }, [activeChat]);
 
+  // Inizializza il socket una volta sola
+  useEffect(() => {
+    const token = localStorage.getItem("token");
+    const newSocket = io("http://localhost:3000", {
+      auth: { token },
+      reconnection: true,
+      reconnectionAttempts: 5,
+      reconnectionDelay: 1000,
+    });
+
+    newSocket.on("connect", () => {
+      console.log("Connected to socket");
+      newSocket.emit("join", getUserId());
+    });
+
+    newSocket.on("connect_error", (error: any) => {
+      console.error("Errore di connessione socket:", error);
+    });
+
+    setSocket(newSocket);
+
+    return () => {
+      if (newSocket) newSocket.disconnect();
+    };
+  }, []); // Esegui solo all'mount
+
+  // Gestione messaggi e aggiornamenti chat
+  useEffect(() => {
+    if (!socket) return;
+
+    socket.on("newMessage", (message: any) => {
+      if (activeChat === message.senderId || activeChat === message.receiverId) {
+        setMessages((prev) => [...prev, message]);
+      }
+    });
+
+    socket.on("updateChat", (update: any) => {
+      setChats((prevChats) =>
+        prevChats.map((chat) => {
+          if (chat.userId === update.senderId || chat.userId === update.receiverId) {
+            return {
+              ...chat,
+              lastMessage: update.content,
+              lastMessageTime: update.timestamp,
+              hasMessages: true,
+            };
+          }
+          return chat;
+        })
+      );
+    });
+
+    return () => {
+      socket.off("newMessage");
+      socket.off("updateChat");
+    };
+  }, [socket, activeChat]);
+
   const handleSendMessage = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!newMessage.trim() || !activeChat) return;
+    if (!newMessage.trim() || !activeChat || !socket) return;
 
-    try {
-      const token = localStorage.getItem("token");
-      const response = await fetch("http://localhost:3000/api/messages", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
-        },
-        body: JSON.stringify({
-          receiverId: activeChat,
-          content: newMessage,
-        }),
-      });
+    socket.emit("message", {
+      senderId: getUserId(),
+      receiverId: activeChat,
+      content: newMessage,
+    });
 
-      const data = await response.json();
-      setMessages([...messages, data]);
-      setNewMessage("");
-    } catch (error) {
-      console.error("Errore nell'invio del messaggio:", error);
-    }
+    setNewMessage("");
   };
 
   if (loading) {
@@ -126,7 +175,7 @@ export default function Messages() {
           <div className="space-y-2">
             {chats.map((chat) => (
               <button
-                key={chat.id}
+                key={chat.userId}
                 onClick={() => setActiveChat(chat.userId)}
                 className={`w-full p-3 flex items-center gap-3 rounded-lg transition-colors ${
                   activeChat === chat.userId
@@ -137,15 +186,17 @@ export default function Messages() {
                 <div className="flex-1">
                   <p className="font-medium">{chat.userName}</p>
                   <p className="text-sm text-gray-500 truncate">
-                    {chat.lastMessage}
+                    {chat.lastMessage || "Nessun messaggio"}
                   </p>
                 </div>
-                <div className="text-xs text-gray-500">
-                  {new Date(chat.lastMessageTime).toLocaleTimeString([], {
-                    hour: "2-digit",
-                    minute: "2-digit",
-                  })}
-                </div>
+                {chat.lastMessageTime && (
+                  <div className="text-xs text-gray-500">
+                    {new Date(chat.lastMessageTime).toLocaleTimeString([], {
+                      hour: "2-digit",
+                      minute: "2-digit",
+                    })}
+                  </div>
+                )}
                 {chat.unreadCount > 0 && (
                   <span className="bg-blue-500 text-white text-xs rounded-full w-5 h-5 flex items-center justify-center">
                     {chat.unreadCount}
@@ -161,34 +212,42 @@ export default function Messages() {
       {activeChat ? (
         <div className="flex-1 flex flex-col">
           <div className="flex-1 p-4 overflow-y-auto">
-            <div className="space-y-4">
-              {messages.map((message) => (
-                <div
-                  key={message.id}
-                  className={`flex ${
-                    message.senderId === activeChat
-                      ? "justify-start"
-                      : "justify-end"
-                  }`}
-                >
+            {messages.length > 0 ? (
+              <div className="space-y-4">
+                {messages.map((message) => (
                   <div
-                    className={`max-w-[70%] rounded-lg p-3 ${
+                    key={message.id}
+                    className={`flex ${
                       message.senderId === activeChat
-                        ? "bg-gray-100 dark:bg-gray-800"
-                        : "bg-blue-500 text-white"
+                        ? "justify-start"
+                        : "justify-end"
                     }`}
                   >
-                    <p>{message.content}</p>
-                    <p className="text-xs mt-1 opacity-70">
-                      {new Date(message.timestamp).toLocaleTimeString()}
-                    </p>
+                    <div
+                      className={`max-w-[70%] rounded-lg p-3 ${
+                        message.senderId === activeChat
+                          ? "bg-gray-100 dark:bg-gray-800"
+                          : "bg-blue-500 text-white"
+                      }`}
+                    >
+                      <p>{message.content}</p>
+                      <p className="text-xs mt-1 opacity-70">
+                        {new Date(message.timestamp).toLocaleTimeString()}
+                      </p>
+                    </div>
                   </div>
-                </div>
-              ))}
-            </div>
+                ))}
+              </div>
+            ) : (
+              <div className="flex items-center justify-center h-full text-gray-500">
+                Nessun messaggio. Inizia la conversazione!
+              </div>
+            )}
           </div>
-
-          <form onSubmit={handleSendMessage} className="p-4 border-t border-gray-200 dark:border-gray-700">
+          <form
+            onSubmit={handleSendMessage}
+            className="p-4 border-t border-gray-200 dark:border-gray-700"
+          >
             <div className="flex gap-2">
               <input
                 type="text"

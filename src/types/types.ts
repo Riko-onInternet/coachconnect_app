@@ -53,3 +53,15 @@ export interface Notification {
     [key: string]: any;
   };
 }
+
+export interface Chat {
+  id: string;
+  userId: string;
+  userName: string;
+  email: string;
+  avatar?: string;
+  lastMessage: string;
+  lastMessageTime: string | null;
+  unreadCount: number;
+  hasMessages: boolean;
+}

@@ -64,58 +64,33 @@ export default function ClientList() {
         </button>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+      <div className="grid gap-4 grid-cols-1 md:grid-cols-2 lg:grid-cols-3">
         {clients.map((client) => (
           <div
             key={client.id}
-            className="bg-white dark:bg-gray-800 rounded-lg shadow-lg p-6"
+            className="bg-white dark:bg-gray-800 p-4 rounded-lg shadow"
           >
-            <div className="flex justify-between items-start mb-4">
-              <div>
-                <h3 className="text-lg font-semibold">
-                  {client.firstName} {client.lastName}
-                </h3>
-                <p className="text-gray-600 dark:text-gray-400">{client.email}</p>
-              </div>
-              <button className="text-blue-500 hover:text-blue-600">
-                <span className="sr-only">Menu</span>
-                ⋮
-              </button>
-            </div>
-
-            <div className="space-y-2">
-              {client.profile.fitnessLevel && (
-                <p className="text-sm">
-                  <span className="font-medium">Livello:</span>{" "}
-                  {client.profile.fitnessLevel}
-                </p>
+            <h3 className="font-semibold text-lg">
+              {client.firstName} {client.lastName}
+            </h3>
+            <p className="text-gray-600 dark:text-gray-300">{client.email}</p>
+            <div className="mt-2">
+              <p>
+                Livello fitness:{" "}
+                {client.profile?.fitnessLevel || "Non specificato"}
+              </p>
+              <p>
+                Obiettivi:{" "}
+                {(client.profile?.fitnessGoals ?? []).length > 0
+                  ? client.profile?.fitnessGoals?.join(", ")
+                  : "Non specificati"}
+              </p>
+              {client.profile?.weight && (
+                <p>Peso: {client.profile.weight} kg</p>
               )}
-              {client.profile.fitnessGoals && (
-                <div className="flex flex-wrap gap-2">
-                  {client.profile.fitnessGoals.map((goal, index) => (
-                    <span
-                      key={index}
-                      className="px-2 py-1 bg-blue-100 dark:bg-blue-900 text-blue-800 dark:text-blue-200 text-xs rounded-full"
-                    >
-                      {goal}
-                    </span>
-                  ))}
-                </div>
+              {client.profile?.height && (
+                <p>Altezza: {client.profile.height} cm</p>
               )}
-            </div>
-
-            <div className="mt-4 pt-4 border-t border-gray-200 dark:border-gray-700">
-              <h4 className="font-medium mb-2">Schede Attive</h4>
-              {client.workoutPlans
-                .filter((plan) => plan.isActive)
-                .map((plan) => (
-                  <div
-                    key={plan.id}
-                    className="text-sm text-gray-600 dark:text-gray-400"
-                  >
-                    • {plan.name}
-                  </div>
-                ))}
             </div>
           </div>
         ))}
