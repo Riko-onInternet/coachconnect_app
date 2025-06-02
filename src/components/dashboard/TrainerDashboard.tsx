@@ -23,14 +23,9 @@ export default function TrainerDashboard() {
     router.push("/login");
   };
 
+  // Nel component TrainerDashboard, modifica gli useEffect
   useEffect(() => {
-    const socket = io("http://localhost:3000", {
-      auth: { token: localStorage.getItem("token") },
-    });
-
-    const checkUnreadMessages = async () => {
-      if (activeTab === "messages") return; // Non controllare se siamo nei messaggi
-
+    const checkInitialUnreadMessages = async () => {
       try {
         const token = localStorage.getItem("token");
         const response = await fetch(
@@ -44,22 +39,36 @@ export default function TrainerDashboard() {
 
         if (response.ok) {
           const { count } = await response.json();
-          setUnreadMessages(count);
+          if (count > 0) {
+            // Aggiunta questa condizione
+            setUnreadMessages(count);
+          }
         }
       } catch (error) {
         console.error("Errore nel recupero dei messaggi non letti:", error);
       }
     };
 
+    // Esegui il controllo iniziale
+    checkInitialUnreadMessages();
+
+    // Rimuoviamo il setInterval dato che ora useremo solo il socket
+    return () => {};
+  }, []); // Solo al mount
+
+  // Modifica l'useEffect esistente per il socket
+  useEffect(() => {
+    const socket = io("http://localhost:3000", {
+      auth: { token: localStorage.getItem("token") },
+    });
+
     socket.on("connect", () => {
       const userId = getUserId();
       if (userId) {
         socket.emit("join", userId);
-        checkUnreadMessages();
       }
     });
 
-    // Modifica la gestione dei nuovi messaggi
     socket.on("newMessage", (message) => {
       const currentUserId = getUserId();
       if (message.receiverId === currentUserId && activeTab !== "messages") {
@@ -67,11 +76,9 @@ export default function TrainerDashboard() {
       }
     });
 
-    checkUnreadMessages(); // Controllo iniziale
-
-    // Rimuovi l'intervallo e usa invece l'evento unreadCount
     socket.on("unreadCount", ({ count }) => {
-      if (activeTab !== "messages") {
+      if (activeTab !== "messages" && count > 0) {
+        // Modifica qui
         setUnreadMessages(count);
       }
     });
