@@ -4,6 +4,7 @@ import ClientList from "@/components/dashboard/ClientList";
 import WorkoutPlans from "@/components/dashboard/WorkoutPlans";
 import Messages from "@/components/dashboard/Messages";
 import Notifications from "@/components/dashboard/Notifications";
+import Exercises from "@/components/dashboard/Exercises";
 
 export default function TrainerDashboard() {
   const router = useRouter();
@@ -48,7 +49,7 @@ export default function TrainerDashboard() {
       <aside
         className={`${
           isSidebarOpen ? "translate-x-0" : "-translate-x-full"
-        } md:translate-x-0 fixed md:static top-0 left-0 h-full w-64 bg-white dark:bg-gray-800 shadow-lg transition-transform duration-300 ease-in-out z-30 md:min-h-screen flex flex-col justify-between`}
+        } md:translate-x-0 fixed top-0 left-0 h-full w-64 bg-white dark:bg-gray-800 shadow-lg transition-transform duration-300 ease-in-out z-30 md:min-h-screen flex flex-col justify-between`}
       >
         <nav className="mt-8 space-y-2 px-4">
           <button
@@ -76,6 +77,19 @@ export default function TrainerDashboard() {
             }`}
           >
             💪 Schede Allenamento
+          </button>
+          <button
+            onClick={() => {
+              setActiveTab("exercises");
+              setIsSidebarOpen(false);
+            }}
+            className={`w-full px-4 py-2 text-left rounded-lg ${
+              activeTab === "exercises"
+                ? "bg-blue-500 text-white"
+                : "hover:bg-gray-100 dark:hover:bg-gray-700"
+            }`}
+          >
+            🥊 Esercizi
           </button>
           <button
             onClick={() => {
@@ -136,9 +150,10 @@ export default function TrainerDashboard() {
       )}
 
       {/* Content Area */}
-      <main className="flex-1 p-4 md:p-8 mt-0 md:mt-0">
+      <main className="flex-1 p-4 md:p-8 mt-0 md:mt-0 md:ml-64">
         {activeTab === "clients" && <ClientList />}
         {activeTab === "workouts" && <WorkoutPlans />}
+        {activeTab === "exercises" && <Exercises />}
         {activeTab === "messages" && <Messages />}
         {activeTab === "notifications" && <Notifications />}
       </main>
