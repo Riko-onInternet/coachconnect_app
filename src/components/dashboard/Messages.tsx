@@ -9,14 +9,16 @@ interface Chat {
   lastMessage: string;
   lastMessageTime: string;
   unreadCount: number;
-  hasMessages: boolean; // Aggiungi questa proprietà
+  hasMessages: boolean;
 }
 
 interface Message {
   id: string;
   senderId: string;
+  receiverId: string;
   content: string;
   timestamp: string;
+  read: boolean;
 }
 
 export default function Messages() {
@@ -117,31 +119,33 @@ export default function Messages() {
   useEffect(() => {
     if (!socket) return;
 
-    socket.on("newMessage", (message: any) => {
-      if (activeChat === message.senderId || activeChat === message.receiverId) {
-        setMessages((prev) => [...prev, message]);
-      }
-    });
+    socket.on("newMessage", (message: Message) => {
+      if (
+        activeChat === message.senderId || 
+        activeChat === message.receiverId
+      ) {
+        setMessages(prev => [...prev, message]);
 
-    socket.on("updateChat", (update: any) => {
-      setChats((prevChats) =>
-        prevChats.map((chat) => {
-          if (chat.userId === update.senderId || chat.userId === update.receiverId) {
-            return {
-              ...chat,
-              lastMessage: update.content,
-              lastMessageTime: update.timestamp,
-              hasMessages: true,
-            };
-          }
-          return chat;
-        })
-      );
+        // Aggiorna la lista delle chat con l'ultimo messaggio
+        setChats(prevChats =>
+          prevChats.map(chat => {
+            if (chat.userId === message.senderId || chat.userId === message.receiverId) {
+              return {
+                ...chat,
+                lastMessage: message.content,
+                lastMessageTime: message.timestamp,
+                hasMessages: true,
+                unreadCount: activeChat === message.senderId ? 0 : chat.unreadCount + 1
+              };
+            }
+            return chat;
+          })
+        );
+      }
     });
 
     return () => {
       socket.off("newMessage");
-      socket.off("updateChat");
     };
   }, [socket, activeChat]);
 
@@ -149,14 +153,57 @@ export default function Messages() {
     e.preventDefault();
     if (!newMessage.trim() || !activeChat || !socket) return;
 
-    socket.emit("message", {
-      senderId: getUserId(),
+    const currentUserId = getUserId();
+    const messageData: Message = {
+      id: `temp-${Date.now()}`, // Aggiungiamo un ID temporaneo
+      senderId: currentUserId || "", // Assicuriamoci che non sia null
       receiverId: activeChat,
       content: newMessage,
-    });
+      timestamp: new Date().toISOString(),
+      read: false
+    };
 
+    socket.emit("message", messageData);
+
+    // Aggiungi immediatamente il messaggio alla lista locale
+    setMessages(prev => [...prev, messageData]);
     setNewMessage("");
+
+    // Aggiorna la chat con l'ultimo messaggio
+    setChats(prevChats =>
+      prevChats.map(chat => {
+        if (chat.userId === activeChat) {
+          return {
+            ...chat,
+            lastMessage: messageData.content,
+            lastMessageTime: messageData.timestamp,
+            hasMessages: true
+          };
+        }
+        return chat;
+      })
+    );
   };
+
+  useEffect(() => {
+    if (activeChat) {
+      const markMessagesAsRead = async () => {
+        try {
+          const token = localStorage.getItem("token");
+          await fetch(`http://localhost:3000/api/messages/${activeChat}/read`, {
+            method: 'PATCH',
+            headers: {
+              Authorization: `Bearer ${token}`,
+            },
+          });
+        } catch (error) {
+          console.error("Errore nella marcatura dei messaggi come letti:", error);
+        }
+      };
+
+      markMessagesAsRead();
+    }
+  }, [activeChat]);
 
   if (loading) {
     return (
@@ -214,29 +261,28 @@ export default function Messages() {
           <div className="flex-1 p-4 overflow-y-auto">
             {messages.length > 0 ? (
               <div className="space-y-4">
-                {messages.map((message) => (
-                  <div
-                    key={message.id}
-                    className={`flex ${
-                      message.senderId === activeChat
-                        ? "justify-start"
-                        : "justify-end"
-                    }`}
-                  >
+                {messages.map((message) => {
+                  const isCurrentUser = message.senderId === getUserId();
+                  return (
                     <div
-                      className={`max-w-[70%] rounded-lg p-3 ${
-                        message.senderId === activeChat
-                          ? "bg-gray-100 dark:bg-gray-800"
-                          : "bg-blue-500 text-white"
-                      }`}
+                      key={message.id || `${message.senderId}-${message.timestamp}`}
+                      className={`flex ${isCurrentUser ? "justify-end" : "justify-start"}`}
                     >
-                      <p>{message.content}</p>
-                      <p className="text-xs mt-1 opacity-70">
-                        {new Date(message.timestamp).toLocaleTimeString()}
-                      </p>
+                      <div
+                        className={`max-w-[70%] rounded-lg p-3 ${
+                          isCurrentUser
+                            ? "bg-blue-500 text-white"
+                            : "bg-gray-100 dark:bg-gray-800"
+                        }`}
+                      >
+                        <p>{message.content}</p>
+                        <p className="text-xs mt-1 opacity-70">
+                          {new Date(message.timestamp).toLocaleTimeString()}
+                        </p>
+                      </div>
                     </div>
-                  </div>
-                ))}
+                  );
+                })}
               </div>
             ) : (
               <div className="flex items-center justify-center h-full text-gray-500">
