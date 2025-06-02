@@ -38,21 +38,30 @@ export default function TrainerDashboard() {
         );
 
         if (response.ok) {
-          const { count } = await response.json();
-          if (count > 0) {
-            // Aggiunta questa condizione
-            setUnreadMessages(count);
+          const data = await response.json();
+          // Verifica che count esista prima di usarlo
+          if (data && typeof data.count !== 'undefined') {
+            // Salva il conteggio in localStorage
+            localStorage.setItem("unreadMessagesCount", data.count.toString());
+            if (data.count > 0) {
+              setUnreadMessages(data.count);
+            }
           }
         }
       } catch (error) {
         console.error("Errore nel recupero dei messaggi non letti:", error);
       }
     };
-
+  
+    // Recupera il conteggio salvato in localStorage all'avvio
+    const savedCount = localStorage.getItem("unreadMessagesCount");
+    if (savedCount && parseInt(savedCount) > 0) {
+      setUnreadMessages(parseInt(savedCount));
+    }
+  
     // Esegui il controllo iniziale
     checkInitialUnreadMessages();
-
-    // Rimuoviamo il setInterval dato che ora useremo solo il socket
+  
     return () => {};
   }, []); // Solo al mount
 
@@ -61,34 +70,38 @@ export default function TrainerDashboard() {
     const socket = io("http://localhost:3000", {
       auth: { token: localStorage.getItem("token") },
     });
-
+  
     socket.on("connect", () => {
       const userId = getUserId();
       if (userId) {
         socket.emit("join", userId);
       }
     });
-
+  
     socket.on("newMessage", (message) => {
       const currentUserId = getUserId();
       if (message.receiverId === currentUserId && activeTab !== "messages") {
-        setUnreadMessages((prev) => prev + 1);
+        const newCount = unreadMessages + 1;
+        setUnreadMessages(newCount);
+        // Aggiorna il conteggio in localStorage
+        localStorage.setItem("unreadMessagesCount", newCount.toString());
       }
     });
-
+  
     socket.on("unreadCount", ({ count }) => {
       if (activeTab !== "messages" && count > 0) {
-        // Modifica qui
         setUnreadMessages(count);
+        // Aggiorna il conteggio in localStorage
+        localStorage.setItem("unreadMessagesCount", count.toString());
       }
     });
-
+  
     return () => {
       socket.off("newMessage");
       socket.off("unreadCount");
       socket.disconnect();
     };
-  }, [activeTab]); // Aggiungi activeTab come dipendenza
+  }, [activeTab, unreadMessages]); // Aggiungi unreadMessages come dipendenza
 
   // Modifica handleMessageTabClick
   const handleMessageTabClick = async () => {
@@ -101,6 +114,8 @@ export default function TrainerDashboard() {
         },
       });
       setUnreadMessages(0);
+      // Resetta il conteggio in localStorage
+      localStorage.setItem("unreadMessagesCount", "0");
     } catch (error) {
       console.error("Errore nel reset dei messaggi non letti:", error);
     }
@@ -242,7 +257,7 @@ export default function TrainerDashboard() {
       )}
 
       {/* Content Area */}
-      <main className="flex-1 p-4 md:p-8 mt-0 md:mt-0 md:ml-64">
+      <main className="flex-1 md:ml-64">
         {activeTab === "clients" && <ClientList />}
         {activeTab === "workouts" && <WorkoutPlans />}
         {activeTab === "exercises" && <Exercises />}
@@ -252,3 +267,4 @@ export default function TrainerDashboard() {
     </div>
   );
 }
+// p-4 md:p-8 mt-0 md:mt-0

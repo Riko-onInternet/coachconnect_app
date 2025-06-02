@@ -214,106 +214,178 @@ export default function Messages() {
   }
 
   return (
-    <div className="flex h-[calc(100vh-theme(spacing.16))] md:h-[calc(100vh-theme(spacing.8))]">
+    <div className="flex h-[calc(100vh-theme(spacing.16))] md:h-[calc(100vh-theme(spacing.8))] bg-white dark:bg-gray-900 rounded-lg shadow-md overflow-hidden">
       {/* Lista chat */}
-      <div className="w-80 border-r border-gray-200 dark:border-gray-700">
-        <div className="p-4">
-          <h2 className="text-lg font-semibold mb-4">Chat</h2>
-          <div className="space-y-2">
-            {chats.map((chat) => (
-              <button
-                key={chat.userId}
-                onClick={() => setActiveChat(chat.userId)}
-                className={`w-full p-3 flex items-center gap-3 rounded-lg transition-colors ${
-                  activeChat === chat.userId
-                    ? "bg-blue-50 dark:bg-blue-900/20"
-                    : "hover:bg-gray-50 dark:hover:bg-gray-800"
-                }`}
-              >
-                <div className="flex-1">
-                  <p className="font-medium">{chat.userName}</p>
-                  <p className="text-sm text-gray-500 truncate">
-                    {chat.lastMessage || "Nessun messaggio"}
-                  </p>
-                </div>
-                {chat.lastMessageTime && (
-                  <div className="text-xs text-gray-500">
-                    {new Date(chat.lastMessageTime).toLocaleTimeString([], {
-                      hour: "2-digit",
-                      minute: "2-digit",
-                    })}
+      <div className="w-80 border-r border-gray-200 dark:border-gray-700 flex flex-col">
+        <div className="p-4 border-b border-gray-200 dark:border-gray-700">
+          <h2 className="text-xl font-bold text-gray-800 dark:text-white">Messaggi</h2>
+        </div>
+        <div className="overflow-y-auto flex-1">
+          {chats.length > 0 ? (
+            <div className="space-y-1 p-2">
+              {chats.map((chat) => (
+                <button
+                  key={chat.userId}
+                  onClick={() => setActiveChat(chat.userId)}
+                  className={`w-full p-3 flex items-center gap-3 rounded-lg transition-colors ${
+                    activeChat === chat.userId
+                      ? "bg-blue-50 dark:bg-blue-900/20 border-l-4 border-blue-500"
+                      : "hover:bg-gray-50 dark:hover:bg-gray-800"
+                  }`}
+                >
+                  <div className="h-10 w-10 rounded-full bg-blue-100 dark:bg-blue-900 flex items-center justify-center text-blue-600 dark:text-blue-300 font-semibold">
+                    {chat.userName.charAt(0).toUpperCase()}
                   </div>
-                )}
-                {chat.unreadCount > 0 && (
-                  <span className="bg-blue-500 text-white text-xs rounded-full w-5 h-5 flex items-center justify-center">
-                    {chat.unreadCount}
-                  </span>
-                )}
-              </button>
-            ))}
-          </div>
+                  <div className="flex-1 overflow-hidden">
+                    <div className="flex justify-between items-center">
+                      <p className="font-medium text-gray-900 dark:text-white truncate">{chat.userName}</p>
+                      {chat.lastMessageTime && (
+                        <span className="text-xs text-gray-500 whitespace-nowrap">
+                          {new Date(chat.lastMessageTime).toLocaleDateString([], {
+                            month: 'short',
+                            day: 'numeric'
+                          })}
+                        </span>
+                      )}
+                    </div>
+                    <div className="flex justify-between items-center">
+                      <p className="text-sm text-gray-500 dark:text-gray-400 truncate">
+                        {chat.lastMessage || "Nessun messaggio"}
+                      </p>
+                      {chat.unreadCount > 0 && (
+                        <span className="bg-blue-500 text-white text-xs rounded-full min-w-5 h-5 flex items-center justify-center px-1.5">
+                          {chat.unreadCount}
+                        </span>
+                      )}
+                    </div>
+                  </div>
+                </button>
+              ))}
+            </div>
+          ) : (
+            <div className="flex items-center justify-center h-32 text-gray-500 dark:text-gray-400">
+              Nessuna chat disponibile
+            </div>
+          )}
         </div>
       </div>
 
       {/* Area messaggi */}
       {activeChat ? (
-        <div className="flex-1 flex flex-col">
-          <div className="flex-1 p-4 overflow-y-auto">
+        <div className="flex-1 flex flex-col bg-gray-50 dark:bg-gray-900">
+          <div className="p-4 border-b border-gray-200 dark:border-gray-700 flex items-center">
+            <div className="h-10 w-10 rounded-full bg-blue-100 dark:bg-blue-900 flex items-center justify-center text-blue-600 dark:text-blue-300 font-semibold mr-3">
+              {chats.find(chat => chat.userId === activeChat)?.userName.charAt(0).toUpperCase()}
+            </div>
+            <h3 className="text-lg font-semibold text-gray-800 dark:text-white">
+              {chats.find(chat => chat.userId === activeChat)?.userName}
+            </h3>
+          </div>
+          <div className="flex-1 p-4 overflow-y-auto" style={{ backgroundImage: 'url("/chat-bg-pattern.png")' }}>
             {messages.length > 0 ? (
               <div className="space-y-4">
-                {messages.map((message) => {
+                {messages.map((message, index) => {
                   const isCurrentUser = message.senderId === getUserId();
+                  const showDate = index === 0 || 
+                    new Date(message.timestamp).toDateString() !== 
+                    new Date(messages[index - 1].timestamp).toDateString();
+                  
                   return (
-                    <div
-                      key={message.id || `${message.senderId}-${message.timestamp}`}
-                      className={`flex ${isCurrentUser ? "justify-end" : "justify-start"}`}
-                    >
-                      <div
-                        className={`max-w-[70%] rounded-lg p-3 ${
-                          isCurrentUser
-                            ? "bg-blue-500 text-white"
-                            : "bg-gray-100 dark:bg-gray-800"
-                        }`}
-                      >
-                        <p>{message.content}</p>
-                        <p className="text-xs mt-1 opacity-70">
-                          {new Date(message.timestamp).toLocaleTimeString()}
-                        </p>
+                    <div key={message.id || `${message.senderId}-${message.timestamp}`}>
+                      {showDate && (
+                        <div className="flex justify-center my-4">
+                          <span className="px-3 py-1 bg-gray-200 dark:bg-gray-700 text-gray-600 dark:text-gray-300 text-xs rounded-full">
+                            {new Date(message.timestamp).toLocaleDateString()}
+                          </span>
+                        </div>
+                      )}
+                      <div className={`flex ${isCurrentUser ? "justify-end" : "justify-start"} mb-2`}>
+                        <div
+                          className={`max-w-[70%] rounded-lg p-3 ${
+                            isCurrentUser
+                              ? "bg-blue-500 text-white rounded-tr-none"
+                              : "bg-white dark:bg-gray-800 text-gray-800 dark:text-gray-200 rounded-tl-none shadow-sm"
+                          }`}
+                        >
+                          <p className="whitespace-pre-wrap break-words">{message.content}</p>
+                          <div className="flex items-center justify-end mt-1 space-x-1">
+                            <p className="text-xs opacity-70">
+                              {new Date(message.timestamp).toLocaleTimeString([], {
+                                hour: '2-digit',
+                                minute: '2-digit'
+                              })}
+                            </p>
+                            {isCurrentUser && (
+                              <span className="text-xs">
+                                {message.read ? 
+                                  <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="inline-block">
+                                    <path d="M18 6L7 17l-5-5"/>
+                                    <path d="M22 10L13 19l-3-3"/>
+                                  </svg> : 
+                                  <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="inline-block">
+                                    <path d="M20 6L9 17l-5-5"/>
+                                  </svg>
+                                }
+                              </span>
+                            )}
+                          </div>
+                        </div>
                       </div>
                     </div>
                   );
                 })}
               </div>
             ) : (
-              <div className="flex items-center justify-center h-full text-gray-500">
-                Nessun messaggio. Inizia la conversazione!
+              <div className="flex flex-col items-center justify-center h-full text-gray-500 dark:text-gray-400">
+                <svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path>
+                </svg>
+                <p className="mt-2">Nessun messaggio. Inizia la conversazione!</p>
               </div>
             )}
           </div>
           <form
             onSubmit={handleSendMessage}
-            className="p-4 border-t border-gray-200 dark:border-gray-700"
+            className="p-3 border-t border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800"
           >
-            <div className="flex gap-2">
+            <div className="flex gap-2 items-center">
+              <button
+                type="button"
+                className="p-2 text-gray-500 hover:text-blue-500 dark:text-gray-400 dark:hover:text-blue-400 transition-colors"
+                title="Allega file"
+              >
+                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M21.44 11.05l-9.19 9.19a6 6 0 0 1-8.49-8.49l9.19-9.19a4 4 0 0 1 5.66 5.66l-9.2 9.19a2 2 0 0 1-2.83-2.83l8.49-8.48"></path>
+                </svg>
+              </button>
               <input
                 type="text"
                 value={newMessage}
                 onChange={(e) => setNewMessage(e.target.value)}
                 placeholder="Scrivi un messaggio..."
-                className="flex-1 px-4 py-2 rounded-lg border border-gray-300 dark:border-gray-600 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="flex-1 px-4 py-2 rounded-full border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
               />
               <button
                 type="submit"
-                className="px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors"
+                className="p-2 bg-blue-500 text-white rounded-full hover:bg-blue-600 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                disabled={!newMessage.trim()}
+                title="Invia messaggio"
               >
-                Invia
+                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <line x1="22" y1="2" x2="11" y2="13"></line>
+                  <polygon points="22 2 15 22 11 13 2 9 22 2"></polygon>
+                </svg>
               </button>
             </div>
           </form>
         </div>
       ) : (
-        <div className="flex-1 flex items-center justify-center text-gray-500">
-          Seleziona una chat per iniziare a messaggiare
+        <div className="flex-1 flex flex-col items-center justify-center text-gray-500 dark:text-gray-400 bg-gray-50 dark:bg-gray-900">
+          <svg xmlns="http://www.w3.org/2000/svg" width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1" strokeLinecap="round" strokeLinejoin="round">
+            <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path>
+          </svg>
+          <h3 className="mt-4 text-xl font-medium text-gray-700 dark:text-gray-300">I tuoi messaggi</h3>
+          <p className="mt-2 text-center max-w-md px-4">Seleziona una chat dalla lista per visualizzare i messaggi e iniziare a conversare</p>
         </div>
       )}
     </div>
