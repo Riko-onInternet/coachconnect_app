@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { API_BASE_URL } from "@/utils/config";
 
 interface WorkoutPlan {
   id: string;
@@ -32,7 +33,7 @@ export default function WorkoutPlans() {
     const fetchWorkoutPlans = async () => {
       try {
         const token = localStorage.getItem("token");
-        const response = await fetch("http://localhost:3000/api/trainer/workout-plans", {
+        const response = await fetch(`${API_BASE_URL}/api/trainer/workout-plans`, {
           headers: {
             Authorization: `Bearer ${token}`,
           },

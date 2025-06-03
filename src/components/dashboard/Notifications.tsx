@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import { Notification } from "@/types/types";
+import { API_BASE_URL } from "@/utils/config";
 
 export default function Notifications() {
   const [notifications, setNotifications] = useState<Notification[]>([]);
@@ -9,7 +10,7 @@ export default function Notifications() {
     const fetchNotifications = async () => {
       try {
         const token = localStorage.getItem("token");
-        const response = await fetch("http://localhost:3000/api/notifications", {
+        const response = await fetch(`${API_BASE_URL}/api/notifications`, {
           headers: {
             Authorization: `Bearer ${token}`,
           },
@@ -35,7 +36,7 @@ export default function Notifications() {
     try {
       const token = localStorage.getItem("token");
       const response = await fetch(
-        `http://localhost:3000/api/notifications/${id}`,
+        `${API_BASE_URL}/api/notifications/${id}`,
         {
           method: "PATCH",
           headers: {
@@ -66,7 +67,7 @@ export default function Notifications() {
     try {
       const token = localStorage.getItem("token");
       const response = await fetch(
-        `http://localhost:3000/api/trainer/handle-request`,
+        `${API_BASE_URL}/api/trainer/handle-request`,
         {
           method: "POST",
           headers: {

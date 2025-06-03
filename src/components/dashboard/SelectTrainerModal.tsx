@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { Trainer } from '@/types/types';
+import { API_BASE_URL } from "@/utils/config";
 
 interface SelectTrainerModalProps {
   onClose: () => void;
@@ -15,7 +16,7 @@ export default function SelectTrainerModal({ onClose, onSelect }: SelectTrainerM
       try {
         const token = localStorage.getItem('token');
         // Modifica l'URL per utilizzare la nuova route
-        const response = await fetch('http://localhost:3000/api/trainer/all', {
+        const response = await fetch(`${API_BASE_URL}/api/trainer/all`, {
           headers: {
             Authorization: `Bearer ${token}`,
           },

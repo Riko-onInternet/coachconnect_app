@@ -8,6 +8,7 @@ import {
   Tooltip,
   Legend,
 } from "recharts";
+import { API_BASE_URL } from "@/utils/config";
 
 interface ProgressData {
   date: string;
@@ -27,7 +28,7 @@ export default function Progress() {
     const fetchProgress = async () => {
       try {
         const token = localStorage.getItem("token");
-        const response = await fetch("http://localhost:3000/api/progress", {
+        const response = await fetch(`${API_BASE_URL}/api/progress`, {
           headers: {
             Authorization: `Bearer ${token}`,
           },
