@@ -2,7 +2,13 @@ import { useState, useEffect, useRef } from "react";
 import { io } from "socket.io-client";
 import { getUserId } from "@/utils/auth";
 import { API_BASE_URL } from "@/utils/config";
-import { ChevronRight, ChevronLeft, MessageSquare, Check, CheckCheck } from "lucide-react";
+import {
+  ChevronRight,
+  ChevronLeft,
+  MessageSquare,
+  Check,
+  CheckCheck,
+} from "lucide-react";
 
 interface Chat {
   id: string;
@@ -145,35 +151,43 @@ export default function Messages() {
 
     socket.on("newMessage", (message: Message) => {
       const currentUserId = getUserId();
-      
+
       // Se il messaggio appartiene alla chat attiva, aggiorna i messaggi
       if (
-        (message.senderId === currentUserId && message.receiverId === activeChat) ||
-        (message.receiverId === currentUserId && message.senderId === activeChat)
+        (message.senderId === currentUserId &&
+          message.receiverId === activeChat) ||
+        (message.receiverId === currentUserId &&
+          message.senderId === activeChat)
       ) {
         setMessages((prev) => [...prev, message]);
       }
-      
+
       // Aggiorna SEMPRE la lista delle chat con l'ultimo messaggio
       setChats((prevChats) =>
         prevChats.map((chat) => {
           // Trova la chat corrispondente al messaggio (sia che sia attiva o no)
           if (
-            (chat.userId === message.senderId && message.receiverId === currentUserId) ||
-            (chat.userId === message.receiverId && message.senderId === currentUserId)
+            (chat.userId === message.senderId &&
+              message.receiverId === currentUserId) ||
+            (chat.userId === message.receiverId &&
+              message.senderId === currentUserId)
           ) {
             // Determina se il messaggio è stato inviato dall'utente corrente
             const isCurrentUser = message.senderId === currentUserId;
-            const displayMessage = isCurrentUser ? `Tu: ${message.content}` : message.content;
-            
+            const displayMessage = isCurrentUser
+              ? `Tu: ${message.content}`
+              : message.content;
+
             return {
               ...chat,
               lastMessage: displayMessage,
               lastMessageTime: message.timestamp,
               hasMessages: true,
               // Incrementa il conteggio dei non letti solo se non è la chat attiva e il messaggio è in arrivo
-              unreadCount: 
-                activeChat === chat.userId || isCurrentUser ? chat.unreadCount : chat.unreadCount + 1,
+              unreadCount:
+                activeChat === chat.userId || isCurrentUser
+                  ? chat.unreadCount
+                  : chat.unreadCount + 1,
             };
           }
           return chat;
