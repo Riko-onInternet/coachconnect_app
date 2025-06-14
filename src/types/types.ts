@@ -16,7 +16,7 @@ export interface Client {
   role: 'CLIENT';
   clientProfile?: {
     fitnessLevel?: string;
-    fitnessGoals?: any[];
+    fitnessGoals?: string[];
     weight?: number;
     height?: number;
   };
@@ -48,9 +48,9 @@ export interface Notification {
   read: boolean;
   createdAt: Date;
   data: {
-    clientId: string; // Rimuoviamo il modificatore opzionale
+    clientId: string;
     trainerId?: string;
-    [key: string]: any;
+    [key: string]: string | undefined;
   };
 }
 

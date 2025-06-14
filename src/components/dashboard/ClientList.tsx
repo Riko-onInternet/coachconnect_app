@@ -4,10 +4,10 @@ import {
   Edit,
   X,
   Search,
-  UserPlus,
-  Filter,
+  // UserPlus,
+  // Filter,
   ChevronRight,
-  Star,
+  // Star,
   Activity,
   Target,
 } from "lucide-react";
@@ -174,7 +174,7 @@ export default function ClientList() {
     }
   };
 
-  const refreshSelectedClient = async (clientId: string) => {
+  /* const refreshSelectedClient = async (clientId: string) => {
     try {
       const token = localStorage.getItem("token");
       const response = await fetch(
@@ -197,7 +197,7 @@ export default function ClientList() {
     } catch (error) {
       console.error("Errore nel recupero dei dati del cliente:", error);
     }
-  };
+  }; */
 
   const fetchClientDetails = async (clientId: string) => {
     try {

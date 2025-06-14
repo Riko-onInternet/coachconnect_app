@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-unused-vars */
 import { useState, useEffect, useRef } from "react";
 import { useRouter } from "next/navigation";
 import MyWorkouts from "@/components/dashboard/MyWorkouts";
