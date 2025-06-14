@@ -1,7 +1,7 @@
 function getApiBaseUrl(): string {
-  const serverIp = "localhost";
-  const serverPort = "3000";
-  return `http://${serverIp}:${serverPort}`;
+  // const serverIp = "localhost";
+  // const serverPort = "3000";
+  return `https://coachconnect-server.onrender.com`;
 }
 
 // URL base per l'API
