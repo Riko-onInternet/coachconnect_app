@@ -46,10 +46,18 @@ export default function RegisterPage() {
         body: JSON.stringify(registrationData),
       });
 
-      const data = await response.json();
+      let data;
+      try {
+        data = await response.json();
+      } catch (e) {
+        console.error("Errore nel parsing della risposta JSON:", e);
+        throw new Error("Errore nella risposta del server");
+      }
+
+      console.log("Risposta del server:", data);
 
       if (!response.ok) {
-        throw new Error(data.message || "Errore durante la registrazione");
+        throw new Error(data.message || data.error || "Errore durante la registrazione");
       }
 
       // Reindirizza alla pagina di login dopo la registrazione
