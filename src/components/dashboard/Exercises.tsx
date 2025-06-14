@@ -1,3 +1,4 @@
+/* eslint-disable @next/next/no-img-element */
 import { useState, useEffect } from "react";
 import { Pen, Trash2, Plus, Search, Filter, X, SearchX } from "lucide-react";
 import { API_BASE_URL } from "@/utils/config";

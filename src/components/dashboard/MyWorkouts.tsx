@@ -30,6 +30,7 @@ export default function MyWorkouts() {
           },
         });
         const data = await response.json();
+        console.log('Dati ricevuti dal server:', data);
         setWorkouts(data);
       } catch (error) {
         console.error("Errore nel caricamento degli allenamenti:", error);
@@ -52,44 +53,53 @@ export default function MyWorkouts() {
   return (
     <div className="space-y-6">
       <h2 className="text-2xl font-bold">I Miei Allenamenti</h2>
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-        {workouts.map((workout) => (
-          <div
-            key={workout.id}
-            className="bg-white dark:bg-gray-800 rounded-lg shadow-lg p-6"
-          >
-            <div className="flex justify-between items-center mb-4">
-              <h3 className="text-lg font-semibold">{workout.title}</h3>
-              <span
-                className={`px-3 py-1 rounded-full text-sm ${
-                  workout.completed
-                    ? "bg-green-100 text-green-800"
-                    : "bg-yellow-100 text-yellow-800"
-                }`}
-              >
-                {workout.completed ? "Completato" : "Da fare"}
-              </span>
-            </div>
-            <p className="text-gray-600 dark:text-gray-300 mb-4">
-              Data: {new Date(workout.date).toLocaleDateString()}
-            </p>
-            <div className="space-y-3">
-              {workout.exercises.map((exercise, index) => (
-                <div
-                  key={index}
-                  className="border-t border-gray-200 dark:border-gray-700 pt-3"
+      
+      {workouts.length === 0 ? (
+        <div className="bg-white dark:bg-gray-800 rounded-lg shadow-lg p-6 text-center">
+          <p className="text-gray-600 dark:text-gray-300">
+            Non hai ancora allenamenti assegnati. Il tuo trainer ti assegnerà presto un programma di allenamento.
+          </p>
+        </div>
+      ) : (
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          {workouts.map((workout) => (
+            <div
+              key={workout.id}
+              className="bg-white dark:bg-gray-800 rounded-lg shadow-lg p-6"
+            >
+              <div className="flex justify-between items-center mb-4">
+                <h3 className="text-lg font-semibold">{workout.title}</h3>
+                <span
+                  className={`px-3 py-1 rounded-full text-sm ${
+                    workout.completed
+                      ? "bg-green-100 text-green-800"
+                      : "bg-yellow-100 text-yellow-800"
+                  }`}
                 >
-                  <h4 className="font-medium">{exercise.name}</h4>
-                  <p className="text-sm text-gray-600 dark:text-gray-400">
-                    {exercise.sets} serie x {exercise.reps} ripetizioni @{" "}
-                    {exercise.weight}kg
-                  </p>
-                </div>
-              ))}
+                  {workout.completed ? "Completato" : "Da fare"}
+                </span>
+              </div>
+              <p className="text-gray-600 dark:text-gray-300 mb-4">
+                Data: {new Date(workout.date).toLocaleDateString()}
+              </p>
+              <div className="space-y-3">
+                {workout.exercises.map((exercise, index) => (
+                  <div
+                    key={index}
+                    className="border-t border-gray-200 dark:border-gray-700 pt-3"
+                  >
+                    <h4 className="font-medium">{exercise.name}</h4>
+                    <p className="text-sm text-gray-600 dark:text-gray-400">
+                      {exercise.sets} serie x {exercise.reps} ripetizioni @{" "}
+                      {exercise.weight}kg
+                    </p>
+                  </div>
+                ))}
+              </div>
             </div>
-          </div>
-        ))}
-      </div>
+          ))}
+        </div>
+      )}
     </div>
   );
 }

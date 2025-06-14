@@ -2,7 +2,7 @@ import { useState, useEffect, useRef } from "react";
 import { io } from "socket.io-client";
 import { getUserId } from "@/utils/auth";
 import { API_BASE_URL } from "@/utils/config";
-import { ChevronRight, ChevronLeft, Paperclip, MessageSquare, Check, CheckCheck } from "lucide-react";
+import { ChevronRight, ChevronLeft, MessageSquare, Check, CheckCheck } from "lucide-react";
 
 interface Chat {
   id: string;
@@ -29,7 +29,7 @@ export default function Messages() {
   const [messages, setMessages] = useState<Message[]>([]);
   const [newMessage, setNewMessage] = useState("");
   const [loading, setLoading] = useState(true);
-  const [socket, setSocket] = useState<any>(null);
+  const [socket, setSocket] = useState<ReturnType<typeof io> | null>(null);
   const [showChatList, setShowChatList] = useState(true);
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
@@ -128,7 +128,7 @@ export default function Messages() {
       newSocket.emit("join", getUserId());
     });
 
-    newSocket.on("connect_error", (error: any) => {
+    newSocket.on("connect_error", (error: Error) => {
       console.error("Errore di connessione socket:", error);
     });
 
@@ -144,36 +144,41 @@ export default function Messages() {
     if (!socket) return;
 
     socket.on("newMessage", (message: Message) => {
+      const currentUserId = getUserId();
+      
+      // Se il messaggio appartiene alla chat attiva, aggiorna i messaggi
       if (
-        (message.senderId === getUserId() && message.receiverId === activeChat) ||
-        (message.receiverId === getUserId() && message.senderId === activeChat)
+        (message.senderId === currentUserId && message.receiverId === activeChat) ||
+        (message.receiverId === currentUserId && message.senderId === activeChat)
       ) {
         setMessages((prev) => [...prev, message]);
-
-        // Aggiorna la lista delle chat con l'ultimo messaggio
-        setChats((prevChats) =>
-          prevChats.map((chat) => {
-            if (
-              chat.userId === message.senderId ||
-              chat.userId === message.receiverId
-            ) {
-              // Determina se il messaggio è stato inviato dall'utente corrente
-              const isCurrentUser = message.senderId === getUserId();
-              const displayMessage = isCurrentUser ? `Tu: ${message.content}` : message.content;
-              
-              return {
-                ...chat,
-                lastMessage: displayMessage,
-                lastMessageTime: message.timestamp,
-                hasMessages: true,
-                unreadCount:
-                  activeChat === message.senderId ? 0 : chat.unreadCount + 1,
-              };
-            }
-            return chat;
-          })
-        );
       }
+      
+      // Aggiorna SEMPRE la lista delle chat con l'ultimo messaggio
+      setChats((prevChats) =>
+        prevChats.map((chat) => {
+          // Trova la chat corrispondente al messaggio (sia che sia attiva o no)
+          if (
+            (chat.userId === message.senderId && message.receiverId === currentUserId) ||
+            (chat.userId === message.receiverId && message.senderId === currentUserId)
+          ) {
+            // Determina se il messaggio è stato inviato dall'utente corrente
+            const isCurrentUser = message.senderId === currentUserId;
+            const displayMessage = isCurrentUser ? `Tu: ${message.content}` : message.content;
+            
+            return {
+              ...chat,
+              lastMessage: displayMessage,
+              lastMessageTime: message.timestamp,
+              hasMessages: true,
+              // Incrementa il conteggio dei non letti solo se non è la chat attiva e il messaggio è in arrivo
+              unreadCount: 
+                activeChat === chat.userId || isCurrentUser ? chat.unreadCount : chat.unreadCount + 1,
+            };
+          }
+          return chat;
+        })
+      );
     });
 
     return () => {
@@ -187,8 +192,8 @@ export default function Messages() {
 
     const currentUserId = getUserId();
     const messageData: Message = {
-      id: `temp-${Date.now()}`, // Aggiungiamo un ID temporaneo
-      senderId: currentUserId || "", // Assicuriamoci che non sia null
+      id: `temp-${Date.now()}`,
+      senderId: currentUserId || "",
       receiverId: activeChat,
       content: newMessage,
       timestamp: new Date().toISOString(),
@@ -197,8 +202,6 @@ export default function Messages() {
 
     socket.emit("message", messageData);
 
-    // Aggiungi immediatamente il messaggio alla lista locale
-    setMessages((prev) => [...prev, messageData]);
     setNewMessage("");
 
     // Aggiorna la chat con l'ultimo messaggio
@@ -207,7 +210,7 @@ export default function Messages() {
         if (chat.userId === activeChat) {
           return {
             ...chat,
-            lastMessage: `Tu: ${messageData.content}`, // Aggiungi "Tu:" per indicare che è un messaggio inviato dall'utente
+            lastMessage: `Tu: ${messageData.content}`,
             lastMessageTime: messageData.timestamp,
             hasMessages: true,
           };

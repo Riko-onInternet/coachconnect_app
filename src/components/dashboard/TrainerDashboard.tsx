@@ -7,7 +7,7 @@ import Notifications from "@/components/dashboard/Notifications";
 import Exercises from "@/components/dashboard/Exercises";
 import { io } from "socket.io-client";
 import { getUserId } from "@/utils/auth";
-import { API_BASE_URL } from "@/utils/config";
+import { API_BASE_URL, SOCKET_URL } from "@/utils/config";
 import { Menu, X, LogOut } from "lucide-react";
 
 export default function TrainerDashboard() {
@@ -69,7 +69,7 @@ export default function TrainerDashboard() {
 
   // Modifica l'useEffect esistente per il socket
   useEffect(() => {
-    const socket = io("http://", {
+    const socket = io(SOCKET_URL, {
       auth: { token: localStorage.getItem("token") },
     });
 
