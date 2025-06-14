@@ -1,4 +1,4 @@
-import Link from "next/link";
+// import Link from "next/link";
 
 import Header from "@/components/header";
 
@@ -17,7 +17,7 @@ export default function Home() {
             </h1>
             <p className="text-xl text-gray-600 dark:text-gray-300 mb-8">
               Una piattaforma completa per personal trainer: gestisci clienti,
-              programmi e comunicazioni da un'unica app.
+              programmi e comunicazioni da un&apos;unica app.
             </p>
           </div>
         </section>
