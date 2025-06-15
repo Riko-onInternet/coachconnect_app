@@ -1,8 +1,9 @@
-import { useState, useEffect } from "react";
+import React, { useState, useEffect } from 'react';
 import { API_BASE_URL } from "@/utils/config";
+import WorkoutDetail from './WorkoutDetail';
 
 interface Workout {
-  id: number;
+  id: string; // Cambiato da number a string
   title: string;
   date: string;
   completed: boolean;
@@ -19,6 +20,7 @@ interface Exercise {
 export default function MyWorkouts() {
   const [workouts, setWorkouts] = useState<Workout[]>([]);
   const [loading, setLoading] = useState(true);
+  const [selectedWorkoutId, setSelectedWorkoutId] = useState<string | null>(null); // Cambiato da number a string
 
   useEffect(() => {
     const fetchWorkouts = async () => {
@@ -31,6 +33,7 @@ export default function MyWorkouts() {
         });
         const data = await response.json();
         console.log('Dati ricevuti dal server:', data);
+        console.log('IDs disponibili:', data.map((w: { id: unknown; }) => w.id)); // Aggiungi questo log
         setWorkouts(data);
       } catch (error) {
         console.error("Errore nel caricamento degli allenamenti:", error);
@@ -50,6 +53,16 @@ export default function MyWorkouts() {
     );
   }
 
+  // Se è selezionato un workout, mostra la schermata dettagliata
+  if (selectedWorkoutId) {
+    return (
+      <WorkoutDetail 
+        workoutId={selectedWorkoutId} 
+        onBack={() => setSelectedWorkoutId(null)} 
+      />
+    );
+  }
+
   return (
     <div className="space-y-6">
       <h2 className="text-2xl font-bold">I Miei Allenamenti</h2>
@@ -65,7 +78,8 @@ export default function MyWorkouts() {
           {workouts.map((workout) => (
             <div
               key={workout.id}
-              className="bg-white dark:bg-gray-800 rounded-lg shadow-lg p-6"
+              className="bg-white dark:bg-gray-800 rounded-lg shadow-lg p-6 cursor-pointer hover:shadow-xl transition-shadow"
+              onClick={() => setSelectedWorkoutId(workout.id)}
             >
               <div className="flex justify-between items-center mb-4">
                 <h3 className="text-lg font-semibold">{workout.title}</h3>
@@ -95,6 +109,12 @@ export default function MyWorkouts() {
                     </p>
                   </div>
                 ))}
+              </div>
+              
+              <div className="mt-4 pt-4 border-t border-gray-200 dark:border-gray-700">
+                <button className="w-full px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors">
+                  Inizia Allenamento
+                </button>
               </div>
             </div>
           ))}

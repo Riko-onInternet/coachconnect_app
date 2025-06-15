@@ -1,3 +1,4 @@
+/* eslint-disable @next/next/no-img-element */
 import { useState, useEffect } from 'react';
 import { Trainer } from '@/types/types';
 import { API_BASE_URL } from "@/utils/config";
