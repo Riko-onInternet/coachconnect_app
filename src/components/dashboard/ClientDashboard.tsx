@@ -6,7 +6,9 @@ import Progress from './Progress';
 import Messages from './Messages';
 import Notifications from './Notifications';
 import SelectTrainerModal from './SelectTrainerModal';
-import { API_BASE_URL } from '@/utils/config';
+import { API_BASE_URL, SOCKET_URL } from '@/utils/config';
+import { io } from "socket.io-client";
+import { getUserId } from "@/utils/auth";
 
 type ActiveTab = 'home' | 'workouts' | 'progress' | 'messages';
 
@@ -16,9 +18,10 @@ export default function ClientDashboard() {
   const [showNotifications, setShowNotifications] = useState(false);
   const [hasTrainer, setHasTrainer] = useState<boolean | null>(null);
   const [loading, setLoading] = useState(true);
+  const [unreadMessages, setUnreadMessages] = useState(0);
   const notificationRef = useRef<HTMLDivElement>(null);
 
-  // Aggiungi questo useEffect per controllare lo stato del trainer
+  // Controllo stato del trainer
   useEffect(() => {
     const checkTrainerStatus = async () => {
       try {
@@ -28,7 +31,7 @@ export default function ClientDashboard() {
           return;
         }
 
-        const response = await fetch(`${API_BASE_URL}/api/client/trainer-status`, { // Correggi questa riga
+        const response = await fetch(`${API_BASE_URL}/api/client/trainer-status`, {
           headers: {
             'Authorization': `Bearer ${token}`,
             'Content-Type': 'application/json'
@@ -46,12 +49,85 @@ export default function ClientDashboard() {
         console.error('Errore nella richiesta:', error);
         setHasTrainer(false);
       } finally {
-        setLoading(false); // Importante: imposta loading a false
+        setLoading(false);
       }
     };
 
     checkTrainerStatus();
   }, []);
+
+  // Gestione messaggi non letti
+  useEffect(() => {
+    const checkInitialUnreadMessages = async () => {
+      try {
+        const token = localStorage.getItem("token");
+        const response = await fetch(
+          `${API_BASE_URL}/api/messages/unread-count`,
+          {
+            headers: {
+              Authorization: `Bearer ${token}`,
+            },
+          }
+        );
+
+        if (response.ok) {
+          const data = await response.json();
+          if (data && typeof data.count !== "undefined") {
+            localStorage.setItem("unreadMessagesCount", data.count.toString());
+            if (data.count > 0) {
+              setUnreadMessages(data.count);
+            }
+          }
+        }
+      } catch (error) {
+        console.error("Errore nel recupero dei messaggi non letti:", error);
+      }
+    };
+
+    // Recupera il conteggio salvato in localStorage all'avvio
+    const savedCount = localStorage.getItem("unreadMessagesCount");
+    if (savedCount && parseInt(savedCount) > 0) {
+      setUnreadMessages(parseInt(savedCount));
+    }
+
+    checkInitialUnreadMessages();
+  }, []);
+
+  // Socket per messaggi in tempo reale
+  useEffect(() => {
+    const socket = io(SOCKET_URL, {
+      auth: { token: localStorage.getItem("token") },
+    });
+
+    socket.on("connect", () => {
+      const userId = getUserId();
+      if (userId) {
+        socket.emit("join", userId);
+      }
+    });
+
+    socket.on("newMessage", (message) => {
+      const currentUserId = getUserId();
+      if (message.receiverId === currentUserId && activeTab !== "messages") {
+        const newCount = unreadMessages + 1;
+        setUnreadMessages(newCount);
+        localStorage.setItem("unreadMessagesCount", newCount.toString());
+      }
+    });
+
+    socket.on("unreadCount", ({ count }) => {
+      if (activeTab !== "messages" && count > 0) {
+        setUnreadMessages(count);
+        localStorage.setItem("unreadMessagesCount", count.toString());
+      }
+    });
+
+    return () => {
+      socket.off("newMessage");
+      socket.off("unreadCount");
+      socket.disconnect();
+    };
+  }, [activeTab, unreadMessages]);
 
   // Aggiungi questo useEffect per gestire il click esterno delle notifiche
   useEffect(() => {
@@ -75,6 +151,25 @@ export default function ClientDashboard() {
     window.location.href = "/login";
   };
 
+  // Gestione click su tab messaggi
+  const handleMessageTabClick = async () => {
+    try {
+      const token = localStorage.getItem("token");
+      await fetch(`${API_BASE_URL}/api/messages/mark-all-read`, {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+      setUnreadMessages(0);
+      localStorage.setItem("unreadMessagesCount", "0");
+    } catch (error) {
+      console.error("Errore nel reset dei messaggi non letti:", error);
+    }
+    setActiveTab("messages");
+    setSidebarOpen(false);
+  };
+
   const renderContent = () => {
     switch (activeTab) {
       case 'home':
@@ -94,7 +189,7 @@ export default function ClientDashboard() {
     { id: 'home' as ActiveTab, label: 'Home', icon: HomeIcon },
     { id: 'workouts' as ActiveTab, label: 'I miei allenamenti', icon: Dumbbell },
     { id: 'progress' as ActiveTab, label: 'Progressi', icon: TrendingUp },
-    { id: 'messages' as ActiveTab, label: 'Messaggi', icon: MessageCircle },
+    { id: 'messages' as ActiveTab, label: 'Messaggi', icon: MessageCircle, badge: unreadMessages },
   ];
 
   if (loading) {
@@ -121,17 +216,28 @@ export default function ClientDashboard() {
               <button
                 key={item.id}
                 onClick={() => {
-                  setActiveTab(item.id);
-                  setSidebarOpen(false);
+                  if (item.id === 'messages') {
+                    handleMessageTabClick();
+                  } else {
+                    setActiveTab(item.id);
+                    setSidebarOpen(false);
+                  }
                 }}
-                className={`w-full flex items-center px-6 py-3 text-left hover:bg-gray-100 dark:hover:bg-gray-700 ${
+                className={`w-full flex items-center justify-between px-6 py-3 text-left hover:bg-gray-100 dark:hover:bg-gray-700 ${
                   activeTab === item.id
                     ? 'bg-blue-50 dark:bg-blue-900 text-blue-600 dark:text-blue-400 border-r-4 border-blue-600'
                     : 'text-gray-700 dark:text-gray-300'
                 }`}
               >
-                <Icon className="h-5 w-5 mr-3" />
-                {item.label}
+                <div className="flex items-center">
+                  <Icon className="h-5 w-5 mr-3" />
+                  {item.label}
+                </div>
+                {item.badge && item.badge > 0 && (
+                  <span className="bg-red-500 text-white text-xs rounded-full px-2 py-1 min-w-[20px] text-center">
+                    {item.badge}
+                  </span>
+                )}
               </button>
             );
           })}

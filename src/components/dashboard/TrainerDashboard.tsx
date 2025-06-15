@@ -8,17 +8,13 @@ import Exercises from "@/components/dashboard/Exercises";
 import { io } from "socket.io-client";
 import { getUserId } from "@/utils/auth";
 import { API_BASE_URL, SOCKET_URL } from "@/utils/config";
-import { Menu, X, LogOut } from "lucide-react";
+import { Menu, X, LogOut, Users, Dumbbell, MessageCircle, Bell, Activity } from "lucide-react";
 
 export default function TrainerDashboard() {
   const router = useRouter();
   const [activeTab, setActiveTab] = useState("clients");
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [unreadMessages, setUnreadMessages] = useState(0);
-
-  const toggleSidebar = () => {
-    setIsSidebarOpen(!isSidebarOpen);
-  };
 
   const handleLogout = () => {
     localStorage.removeItem("token");
@@ -125,146 +121,105 @@ export default function TrainerDashboard() {
     setIsSidebarOpen(false);
   };
 
-  return (
-    <div className="flex flex-col lg:flex-row min-h-screen bg-gray-50 dark:bg-gray-900">
-      {/* Mobile Header - sticky per rimanere sempre visibile */}
-      <div className="lg:hidden bg-white dark:bg-gray-800 p-4 flex items-center justify-between sticky top-0 z-10 border-b">
-        <button
-          onClick={toggleSidebar}
-          className="text-gray-600 dark:text-gray-200"
-        >
-          <Menu size={24} />
-        </button>
-        <span className="font-semibold">Dashboard Trainer</span>
-      </div>
+  const menuItems = [
+    { id: 'clients', label: 'I miei clienti', icon: Users },
+    { id: 'workouts', label: 'Schede Allenamento', icon: Dumbbell },
+    { id: 'exercises', label: 'Esercizi', icon: Activity },
+    { id: 'messages', label: 'Messaggi', icon: MessageCircle, badge: unreadMessages },
+    { id: 'notifications', label: 'Notifiche', icon: Bell },
+  ];
 
-      {/* Sidebar - con h-screen e sticky */}
-      <aside
-        className={`${
-          isSidebarOpen ? "translate-x-0" : "-translate-x-full"
-        } lg:translate-x-0 fixed lg:sticky top-0 left-0 h-screen w-64 bg-white dark:bg-gray-800 transition-transform duration-300 ease-in-out z-50 overflow-y-auto flex flex-col justify-between border-r`}
-      >
-        <div>
-          {/* Mobile header dentro la sidebar */}
-          <div className="select-none hidden lg:block border-b p-4">
-            <h1 className="text-xl font-bold text-blue-600 dark:text-blue-400">
-              CoachConnect
-            </h1>
-          </div>
-          <div className="lg:hidden p-4 border-b border-gray-200 dark:border-gray-700 flex items-center justify-between">
-            <div className="select-none">
-              <h1 className="text-xl font-bold text-blue-600 dark:text-blue-400">
-                CoachConnect
-              </h1>
-            </div>
-            <button
-              onClick={toggleSidebar}
-              className="text-gray-600 dark:text-gray-200"
-            >
-              <X size={24} />
-            </button>
-          </div>
-          <nav className="mt-4 space-y-2 px-4">
-            <button
-              onClick={() => {
-                setActiveTab("clients");
-                setIsSidebarOpen(false);
-              }}
-              className={`w-full px-4 py-3 text-left rounded-lg flex items-center gap-3 transition-colors ${
-                activeTab === "clients"
-                  ? "bg-blue-50 text-blue-600 dark:bg-blue-900/20 dark:text-blue-400 font-medium"
-                  : "hover:bg-gray-100 dark:hover:bg-gray-700 text-gray-700 dark:text-gray-300"
-              }`}
-            >
-              <span className="text-xl">👥</span> I miei clienti
-            </button>
-            <button
-              onClick={() => {
-                setActiveTab("workouts");
-                setIsSidebarOpen(false);
-              }}
-              className={`w-full px-4 py-3 text-left rounded-lg flex items-center gap-3 transition-colors ${
-                activeTab === "workouts"
-                  ? "bg-blue-50 text-blue-600 dark:bg-blue-900/20 dark:text-blue-400 font-medium"
-                  : "hover:bg-gray-100 dark:hover:bg-gray-700 text-gray-700 dark:text-gray-300"
-              }`}
-            >
-              💪 Schede Allenamento
-            </button>
-            <button
-              onClick={() => {
-                setActiveTab("exercises");
-                setIsSidebarOpen(false);
-              }}
-              className={`w-full px-4 py-3 text-left rounded-lg flex items-center gap-3 transition-colors ${
-                activeTab === "exercises"
-                  ? "bg-blue-50 text-blue-600 dark:bg-blue-900/20 dark:text-blue-400 font-medium"
-                  : "hover:bg-gray-100 dark:hover:bg-gray-700 text-gray-700 dark:text-gray-300"
-              }`}
-            >
-              🥊 Esercizi
-            </button>
-            <button
-              onClick={handleMessageTabClick}
-              className={`w-full px-4 py-3 text-left rounded-lg flex items-center gap-3 transition-colors ${
-                activeTab === "messages"
-                  ? "bg-blue-50 text-blue-600 dark:bg-blue-900/20 dark:text-blue-400 font-medium"
-                  : "hover:bg-gray-100 dark:hover:bg-gray-700 text-gray-700 dark:text-gray-300"
-              }`}
-            >
-              <div className="flex items-center justify-between">
-                <span>💬 Messaggi</span>
-                {unreadMessages > 0 && (
-                  <span className="bg-red-500 text-white text-xs rounded-full px-2 py-1 ml-2">
-                    {unreadMessages}
+  return (
+    <div className="flex h-screen bg-gray-100 dark:bg-gray-900">
+      {/* Sidebar */}
+      <div className={`fixed inset-y-0 left-0 z-50 w-64 bg-white dark:bg-gray-800 shadow-lg transform ${
+        isSidebarOpen ? 'translate-x-0' : '-translate-x-full'
+      } transition-transform duration-300 ease-in-out lg:translate-x-0 lg:static lg:inset-0`}>
+        <div className="flex items-center justify-center h-16 bg-blue-600">
+          <h1 className="text-xl font-bold text-white">CoachConnect</h1>
+        </div>
+        <nav className="mt-8">
+          {menuItems.map((item) => {
+            const Icon = item.icon;
+            return (
+              <button
+                key={item.id}
+                onClick={() => {
+                  if (item.id === 'messages') {
+                    handleMessageTabClick();
+                  } else {
+                    setActiveTab(item.id);
+                    setIsSidebarOpen(false);
+                  }
+                }}
+                className={`w-full flex items-center justify-between px-6 py-3 text-left hover:bg-gray-100 dark:hover:bg-gray-700 ${
+                  activeTab === item.id
+                    ? 'bg-blue-50 dark:bg-blue-900 text-blue-600 dark:text-blue-400 border-r-4 border-blue-600'
+                    : 'text-gray-700 dark:text-gray-300'
+                }`}
+              >
+                <div className="flex items-center">
+                  <Icon className="h-5 w-5 mr-3" />
+                  {item.label}
+                </div>
+                {item.badge && item.badge > 0 && (
+                  <span className="bg-red-500 text-white text-xs rounded-full px-2 py-1 min-w-[20px] text-center">
+                    {item.badge}
                   </span>
                 )}
-              </div>
-            </button>
-            <button
-              onClick={() => {
-                setActiveTab("notifications");
-                setIsSidebarOpen(false);
-              }}
-              className={`w-full px-4 py-3 text-left rounded-lg flex items-center gap-3 transition-colors ${
-                activeTab === "notifications"
-                  ? "bg-blue-50 text-blue-600 dark:bg-blue-900/20 dark:text-blue-400 font-medium"
-                  : "hover:bg-gray-100 dark:hover:bg-gray-700 text-gray-700 dark:text-gray-300"
-              }`}
-            >
-              🔔 Notifiche
-            </button>
-          </nav>
-        </div>
-        <div className="p-4 border-t border-gray-200 dark:border-gray-700">
+              </button>
+            );
+          })}
+        </nav>
+        
+        <div className="absolute bottom-0 w-full p-4">
           <button
             onClick={handleLogout}
-            className="w-full px-4 py-2 text-left rounded-lg text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20 flex items-center gap-2"
+            className="w-full flex items-center px-4 py-2 text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg"
           >
-            <LogOut size={20} />
+            <LogOut className="h-5 w-5 mr-3" />
             Logout
           </button>
         </div>
-      </aside>
+      </div>
 
-      {/* Overlay per mobile */}
-      {isSidebarOpen && (
-        <div
-          className="fixed inset-0 bg-black bg-opacity-50 z-40 lg:hidden"
-          onClick={() => setIsSidebarOpen(false)}
-        />
-      )}
+      {/* Main content */}
+      <div className="flex-1 flex flex-col overflow-hidden lg:ml-0">
+        {/* Top bar */}
+        <header className="bg-white dark:bg-gray-800 shadow-sm border-b border-gray-200 dark:border-gray-700">
+          <div className="flex items-center justify-between px-6 py-4">
+            <button
+              onClick={() => setIsSidebarOpen(!isSidebarOpen)}
+              className="lg:hidden p-2 rounded-md text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700"
+            >
+              {isSidebarOpen ? <X className="h-6 w-6" /> : <Menu className="h-6 w-6" />}
+            </button>
+            
+            <div className="flex items-center space-x-4">
+              <h2 className="text-xl font-semibold text-gray-800 dark:text-white">
+                {menuItems.find(item => item.id === activeTab)?.label || 'Dashboard'}
+              </h2>
+            </div>
+          </div>
+        </header>
 
-      {/* Content Area */}
-      <main className="flex-1">
-        <div className="bg-white dark:bg-gray-800 rounded-xl overflow-hidden">
+        {/* Page content */}
+        <main className="flex-1 overflow-y-auto p-6">
           {activeTab === "clients" && <ClientList />}
           {activeTab === "workouts" && <WorkoutPlans />}
           {activeTab === "exercises" && <Exercises />}
           {activeTab === "messages" && <Messages />}
           {activeTab === "notifications" && <Notifications />}
-        </div>
-      </main>
+        </main>
+      </div>
+
+      {/* Overlay for mobile sidebar */}
+      {isSidebarOpen && (
+        <div
+          className="fixed inset-0 z-40 bg-black bg-opacity-50 lg:hidden"
+          onClick={() => setIsSidebarOpen(false)}
+        ></div>
+      )}
     </div>
   );
 }

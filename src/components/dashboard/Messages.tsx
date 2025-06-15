@@ -237,15 +237,24 @@ export default function Messages() {
   // Definizione della funzione handleChatClick
   const handleChatClick = (userId: string) => {
     setActiveChat(userId);
+    
+    // Azzera immediatamente il contatore dei messaggi non letti per la chat selezionata
+    setChats((prevChats) =>
+      prevChats.map((chat) => {
+        if (chat.userId === userId) {
+          return {
+            ...chat,
+            unreadCount: 0,
+          };
+        }
+        return chat;
+      })
+    );
+    
     // Su dispositivi mobili, nascondi la lista delle chat quando si seleziona una chat
     if (window.innerWidth < 992) {
       setShowChatList(false);
     }
-  };
-
-  // Definizione della funzione handleBackToList
-  const handleBackToList = () => {
-    setShowChatList(true);
   };
 
   useEffect(() => {
@@ -259,6 +268,20 @@ export default function Messages() {
               Authorization: `Bearer ${token}`,
             },
           });
+          
+          // Dopo aver marcato i messaggi come letti sul server, 
+          // assicurati che il contatore sia azzerato anche localmente
+          setChats((prevChats) =>
+            prevChats.map((chat) => {
+              if (chat.userId === activeChat) {
+                return {
+                  ...chat,
+                  unreadCount: 0,
+                };
+              }
+              return chat;
+            })
+          );
         } catch (error) {
           console.error(
             "Errore nella marcatura dei messaggi come letti:",
@@ -280,14 +303,14 @@ export default function Messages() {
   }
 
   return (
-    <div className="flex flex-col lg:flex-row h-screen bg-white dark:bg-gray-900 rounded-lg shadow-md overflow-hidden">
+    <div className="flex flex-col lg:flex-row h-[calc(100vh-121px)] bg-white dark:bg-gray-900 rounded-lg shadow-md overflow-hidden">
       {/* Lista chat - visibile solo quando showChatList è true o su schermi md e superiori */}
       <div
         className={`${
           showChatList ? "block" : "hidden lg:block"
-        } w-full lg:w-80 lg:min-w-[20rem] border-r border-gray-200 dark:border-gray-700 flex flex-col lg:max-h-full max-h-[60vh]`}
+        } w-full lg:w-80 lg:min-w-[20rem] border-r border-gray-200 dark:border-gray-700 flex flex-col h-full`}
       >
-        <div className="p-3 lg:p-4 border-b border-gray-200 dark:border-gray-700 flex justify-between items-center">
+        <div className="p-3 lg:p-4 border-b border-gray-200 dark:border-gray-700 flex justify-between items-center flex-shrink-0">
           <h2 className="text-lg lg:text-xl font-bold text-gray-800 dark:text-white">
             Messaggi
           </h2>
@@ -300,7 +323,7 @@ export default function Messages() {
             </button>
           )}
         </div>
-        <div className="overflow-y-auto flex-1">
+        <div className="overflow-y-auto flex-1 min-h-0">
           {chats.length > 0 ? (
             <div className="space-y-1 p-2">
               {chats.map((chat) => (
@@ -313,16 +336,16 @@ export default function Messages() {
                       : "hover:bg-gray-50 dark:hover:bg-gray-800"
                   }`}
                 >
-                  <div className="h-8 w-8 lg:h-10 lg:w-10 rounded-full bg-blue-100 dark:bg-blue-900 flex items-center justify-center text-blue-600 dark:text-blue-300 font-semibold">
+                  <div className="h-8 w-8 lg:h-10 lg:w-10 rounded-full bg-blue-100 dark:bg-blue-900 flex items-center justify-center text-blue-600 dark:text-blue-300 font-semibold flex-shrink-0">
                     {chat.userName.charAt(0).toUpperCase()}
                   </div>
-                  <div className="flex-1 overflow-hidden">
+                  <div className="flex-1 overflow-hidden min-w-0">
                     <div className="flex justify-between items-center">
                       <p className="font-medium text-sm lg:text-base text-gray-900 dark:text-white truncate">
                         {chat.userName}
                       </p>
                       {chat.lastMessageTime && (
-                        <span className="text-xs text-gray-500 whitespace-nowrap">
+                        <span className="text-xs text-gray-500 whitespace-nowrap flex-shrink-0 ml-2">
                           {new Date(chat.lastMessageTime).toLocaleDateString(
                             [],
                             {
@@ -338,7 +361,7 @@ export default function Messages() {
                         {chat.lastMessage || "Nessun messaggio"}
                       </p>
                       {chat.unreadCount > 0 && (
-                        <span className="bg-blue-500 text-white text-xs rounded-full min-w-5 h-5 flex items-center justify-center px-1.5">
+                        <span className="bg-blue-500 text-white text-xs rounded-full min-w-5 h-5 flex items-center justify-center px-1.5 flex-shrink-0 ml-2">
                           {chat.unreadCount}
                         </span>
                       )}
@@ -359,33 +382,33 @@ export default function Messages() {
       <div
         className={`${
           !showChatList || window.innerWidth >= 768 ? "flex" : "hidden lg:flex"
-        } flex-1 flex-col bg-gray-50 dark:bg-gray-900 h-dvh`}
+        } flex-1 flex-col bg-gray-50 dark:bg-gray-900 h-full min-w-0`}
       >
         {activeChat ? (
-          <div className="flex flex-col h-full relative">
+          <div className="flex flex-col h-full">
             {/* Header della chat con pulsante indietro e info utente */}
-            <div className="fixed lg:static top-0 lg:top-0 left-0 lg:left-auto right-0 lg:right-auto mt-14 lg:mt-0 z-10 p-3 lg:p-4 border-b border-gray-200 dark:border-gray-700 flex items-center bg-white dark:bg-gray-800">
+            <div className="p-3 lg:p-4 border-b border-gray-200 dark:border-gray-700 flex items-center bg-white dark:bg-gray-800 flex-shrink-0">
               {!showChatList && window.innerWidth < 768 && (
                 <button
-                  onClick={handleBackToList}
+                  onClick={() => setShowChatList(true)}
                   className="mr-2 lg:hidden p-2 text-gray-500 hover:text-blue-500 dark:text-gray-400 dark:hover:text-blue-400 transition-colors"
                 >
                   <ChevronLeft size={20} />
                 </button>
               )}
-              <div className="h-8 w-8 lg:h-10 lg:w-10 rounded-full bg-blue-100 dark:bg-blue-900 flex items-center justify-center text-blue-600 dark:text-blue-300 font-semibold mr-2 lg:mr-3">
+              <div className="h-8 w-8 lg:h-10 lg:w-10 rounded-full bg-blue-100 dark:bg-blue-900 flex items-center justify-center text-blue-600 dark:text-blue-300 font-semibold mr-2 lg:mr-3 flex-shrink-0">
                 {chats
                   .find((chat) => chat.userId === activeChat)
                   ?.userName.charAt(0)
                   .toUpperCase()}
               </div>
-              <h3 className="text-base lg:text-lg font-semibold text-gray-800 dark:text-white">
+              <h3 className="text-base lg:text-lg font-semibold text-gray-800 dark:text-white truncate">
                 {chats.find((chat) => chat.userId === activeChat)?.userName}
               </h3>
             </div>
 
-            {/* Contenitore messaggi - SCROLLABLE con padding per header e form */}
-            <div className="flex-1 p-3 lg:p-4 overflow-y-auto pt-16 lg:pt-0 pb-16 lg:pb-0">
+            {/* Contenitore messaggi - SCROLLABLE */}
+            <div className="flex-1 overflow-y-auto min-h-0 px-3 lg:px-4">
               {messages.length > 0 ? (
                 <div className="space-y-3 lg:space-y-4">
                   {messages.map((message, index) => {
@@ -421,7 +444,7 @@ export default function Messages() {
                                 : "bg-white dark:bg-gray-800 text-gray-800 dark:text-gray-200 rounded-tl-none shadow-sm"
                             }`}
                           >
-                            <p className="whitespace-pre-wrap break-words text-sm lg:text-base">
+                            <p className="whitespace-pre-wrap break-words text-sm lg:text-base word-wrap overflow-wrap">
                               {message.content}
                             </p>
                             <div className="flex items-center justify-end mt-1 space-x-1">
@@ -462,7 +485,7 @@ export default function Messages() {
             </div>
 
             {/* Form */}
-            <div className="fixed lg:sticky bottom-0 lg:bottom-0 left-0 lg:left-auto right-0 lg:right-auto z-10 bg-white dark:bg-gray-800">
+            <div className="bg-white dark:bg-gray-800 flex-shrink-0">
               <form
                 onSubmit={handleSendMessage}
                 className="p-2 lg:p-3 border-t border-gray-200 dark:border-gray-700"
