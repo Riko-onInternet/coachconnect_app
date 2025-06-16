@@ -43,7 +43,7 @@ export default function WorkoutDetail({
     try {
       const token = localStorage.getItem("token");
       console.log(`Tentativo di recuperare workout con ID: ${workoutId}`);
-      
+
       const response = await fetch(
         `${API_BASE_URL}/api/workouts/${workoutId}`,
         {
@@ -52,28 +52,55 @@ export default function WorkoutDetail({
           },
         }
       );
-  
+
       if (response.ok) {
         const data = await response.json();
         setWorkout(data);
 
-        // Inizializza il progresso degli esercizi
-        const initialProgress: { [key: string]: Exercise } = {};
-        data.exercises.forEach((exercise: Exercise, index: number) => {
-          const exerciseKey = `${exercise.name}-${index}`;
-          initialProgress[exerciseKey] = {
-            ...exercise,
-            completed: false,
-            actualWeight: exercise.weight,
-            actualReps: exercise.reps,
-            actualSets: exercise.sets,
-            notes: "",
-          };
-        });
-        setExerciseProgress(initialProgress);
+        // Prova a recuperare i progressi salvati
+        try {
+          const progressResponse = await fetch(
+            `${API_BASE_URL}/api/workouts/${workoutId}/progress`,
+            {
+              headers: {
+                Authorization: `Bearer ${token}`,
+              },
+            }
+          );
+
+          if (progressResponse.ok) {
+            const savedProgress = await progressResponse.json();
+            // Applica i progressi salvati
+            const progressWithSaved: { [key: string]: Exercise } = {};
+
+            data.exercises.forEach((exercise: Exercise, index: number) => {
+              const exerciseKey = `${exercise.name}-${index}`;
+              const savedExercise = savedProgress.exercises?.find(
+                (saved: { exerciseName: string }) => saved.exerciseName === exercise.name
+              );
+
+              progressWithSaved[exerciseKey] = {
+                ...exercise,
+                completed: savedExercise?.completed || false,
+                actualWeight: savedExercise?.weightUsed || exercise.weight,
+                actualReps: savedExercise?.repsCompleted || exercise.reps,
+                actualSets: savedExercise?.setsCompleted || exercise.sets,
+                notes: savedExercise?.notes || "",
+              };
+            });
+
+            setExerciseProgress(progressWithSaved);
+          } else {
+            // Se non ci sono progressi salvati, inizializza normalmente
+            // Funzione helper per inizializzare i progressi
+          }
+        } catch {
+          console.log("Nessun progresso salvato trovato, inizializzo nuovo");
+          initializeProgress(data);
+        }
       } else {
         const errorData = await response.json();
-        console.error('Errore dal server:', errorData);
+        console.error("Errore dal server:", errorData);
         // Mostra un messaggio di errore più informativo
       }
     } catch (error) {
@@ -147,6 +174,22 @@ export default function WorkoutDetail({
     return Object.values(exerciseProgress).every(
       (exercise) => exercise.completed
     );
+  };
+
+  const initializeProgress = (data: { exercises: Exercise[] }) => {
+    const initialProgress: { [key: string]: Exercise } = {};
+    data.exercises.forEach((exercise: Exercise, index: number) => {
+      const exerciseKey = `${exercise.name}-${index}`;
+      initialProgress[exerciseKey] = {
+        ...exercise,
+        completed: false,
+        actualWeight: exercise.weight,
+        actualReps: exercise.reps,
+        actualSets: exercise.sets,
+        notes: "",
+      };
+    });
+    setExerciseProgress(initialProgress);
   };
 
   if (loading) {
