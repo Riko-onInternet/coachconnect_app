@@ -3,7 +3,7 @@ export function getUserId(): string | null {
     // Cerca il token sia in localStorage che in sessionStorage
     const token = localStorage.getItem("token") || sessionStorage.getItem("token");
     if (!token || token === 'null' || token === 'undefined') {
-      console.log("🔍 Token non trovato o non valido");
+      
       return null;
     }
 

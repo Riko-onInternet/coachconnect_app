@@ -1,6 +1,7 @@
-import React, { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { ArrowLeft, Check, Edit3, Save, X } from "lucide-react";
 import { API_BASE_URL } from "@/utils/config";
+import { getValidToken } from "@/utils/auth";
 
 interface Exercise {
   id?: string;
@@ -41,8 +42,12 @@ export default function WorkoutDetail({
 
   const fetchWorkoutDetail = useCallback(async () => {
     try {
-      const token = localStorage.getItem("token");
-      console.log(`Tentativo di recuperare workout con ID: ${workoutId}`);
+      const token = getValidToken();
+      if (!token) {
+        console.error("Token non valido");
+        setLoading(false);
+        return;
+      }
 
       const response = await fetch(
         `${API_BASE_URL}/api/workouts/${workoutId}`,
@@ -53,58 +58,67 @@ export default function WorkoutDetail({
         }
       );
 
-      if (response.ok) {
-        const data = await response.json();
-        setWorkout(data);
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({ 
+          message: 'Errore di comunicazione con il server' 
+        }));
+        console.error("Errore dal server:", errorData);
+        throw new Error(`Errore ${response.status}: ${errorData.message || 'Errore del server'}`);
+      }
+    
+      const data = await response.json();
+      setWorkout(data);
 
-        // Prova a recuperare i progressi salvati
-        try {
-          const progressResponse = await fetch(
-            `${API_BASE_URL}/api/workouts/${workoutId}/progress`,
-            {
-              headers: {
-                Authorization: `Bearer ${token}`,
-              },
-            }
-          );
-
-          if (progressResponse.ok) {
-            const savedProgress = await progressResponse.json();
-            // Applica i progressi salvati
-            const progressWithSaved: { [key: string]: Exercise } = {};
-
-            data.exercises.forEach((exercise: Exercise, index: number) => {
-              const exerciseKey = `${exercise.name}-${index}`;
-              const savedExercise = savedProgress.exercises?.find(
-                (saved: { exerciseName: string }) => saved.exerciseName === exercise.name
-              );
-
-              progressWithSaved[exerciseKey] = {
-                ...exercise,
-                completed: savedExercise?.completed || false,
-                actualWeight: savedExercise?.weightUsed || exercise.weight,
-                actualReps: savedExercise?.repsCompleted || exercise.reps,
-                actualSets: savedExercise?.setsCompleted || exercise.sets,
-                notes: savedExercise?.notes || "",
-              };
-            });
-
-            setExerciseProgress(progressWithSaved);
-          } else {
-            // Se non ci sono progressi salvati, inizializza normalmente
-            // Funzione helper per inizializzare i progressi
+      // Prova a recuperare i progressi salvati con gestione errori migliorata
+      try {
+        const progressResponse = await fetch(
+          `${API_BASE_URL}/api/workouts/${workoutId}/progress`,
+          {
+            headers: {
+              Authorization: `Bearer ${token}`,
+            },
           }
-        } catch {
-          console.log("Nessun progresso salvato trovato, inizializzo nuovo");
+        );
+
+        if (progressResponse.ok) {
+          const savedProgress = await progressResponse.json();
+          // Applica i progressi salvati
+          const progressWithSaved: { [key: string]: Exercise } = {};
+
+          data.exercises.forEach((exercise: Exercise, index: number) => {
+            const exerciseKey = `${exercise.name}-${index}`;
+            const savedExercise = savedProgress.exercises?.find(
+              (saved: { exerciseName: string }) =>
+                saved.exerciseName === exercise.name
+            );
+
+            progressWithSaved[exerciseKey] = {
+              ...exercise,
+              completed: savedExercise?.completed || false,
+              actualWeight: savedExercise?.weightUsed || exercise.weight,
+              actualReps: savedExercise?.repsCompleted || exercise.reps,
+              actualSets: savedExercise?.setsCompleted || exercise.sets,
+              notes: savedExercise?.notes || "",
+            };
+          });
+
+          setExerciseProgress(progressWithSaved);
+        } else {
+          // Se non ci sono progressi salvati o c'è un errore, inizializza normalmente
+          
           initializeProgress(data);
         }
-      } else {
-        const errorData = await response.json();
-        console.error("Errore dal server:", errorData);
-        // Mostra un messaggio di errore più informativo
+      } catch (error) {
+        // Gestione migliorata degli errori per il recupero dei progressi
+        console.error("Errore nel recupero dei progressi:", error);
+        
+        // Non mostrare alert per questo errore, è non critico
+        initializeProgress(data);
       }
     } catch (error) {
       console.error("Errore nel caricamento del workout:", error);
+      // Aggiungi un messaggio di errore più user-friendly
+      alert(`Errore nel caricamento dell'allenamento: ${error instanceof Error ? error.message : 'Errore sconosciuto'}`);
     } finally {
       setLoading(false);
     }
@@ -136,7 +150,12 @@ export default function WorkoutDetail({
 
   const saveWorkoutProgress = async () => {
     try {
-      const token = localStorage.getItem("token");
+      const token = getValidToken();
+      if (!token) {
+        console.error("Token non valido");
+        return;
+      }
+
       const progressData = {
         workoutId,
         exercises: Object.entries(exerciseProgress).map(([, exercise]) => ({

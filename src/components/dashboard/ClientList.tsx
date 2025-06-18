@@ -35,7 +35,6 @@ export default function ClientList() {
     try {
       const token = getValidToken();
       if (!token) {
-        console.log("🔍 Token non disponibile per caricamento clienti");
         setClients([]);
         setLoading(false);
         return;
@@ -46,22 +45,20 @@ export default function ClientList() {
           Authorization: `Bearer ${token}`,
         },
       });
-      
+
       if (!response.ok) {
         throw new Error(`HTTP error! status: ${response.status}`);
       }
-      
+
       const data = await response.json();
-      
+
       // Verifica che data sia un array
       if (Array.isArray(data)) {
         setClients(data);
       } else {
-        console.error("I dati ricevuti non sono un array:", data);
         setClients([]); // Imposta un array vuoto come fallback
       }
-    } catch (error) {
-      console.error("Errore nel caricamento dei clienti:", error);
+    } catch {
       setClients([]); // Imposta un array vuoto in caso di errore
     } finally {
       setLoading(false);
@@ -72,7 +69,6 @@ export default function ClientList() {
     try {
       const token = getValidToken();
       if (!token) {
-        console.log("🔍 Token non disponibile per dettagli cliente");
         return null;
       }
 
@@ -89,9 +85,7 @@ export default function ClientList() {
         const clientData = await response.json();
         return clientData;
       }
-    } catch (error) {
-      console.error("Errore nel recupero dei dettagli del cliente:", error);
-    }
+    } catch {}
     return null;
   };
 

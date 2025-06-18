@@ -14,17 +14,15 @@ export default function Dashboard() {
     const fetchUserRole = async () => {
       try {
         // Cerca il token sia in localStorage che in sessionStorage
-        const token = localStorage.getItem("token") || sessionStorage.getItem("token");
+        const token =
+          localStorage.getItem("token") || sessionStorage.getItem("token");
         if (!token) {
           router.push("/login");
           return;
         }
-        
+
         // Debug del token
-        console.log("Token trovato:", token);
-        console.log("Lunghezza token:", token.length);
-        console.log("Parti del token:", token.split('.').length);
-        
+
         const response = await fetch(`${API_BASE_URL}/api/auth/me`, {
           headers: {
             Authorization: `Bearer ${token}`,
@@ -34,19 +32,20 @@ export default function Dashboard() {
         const data = await response.json();
 
         if (response.ok) {
-          console.log("Ruolo ricevuto (raw):", data.role);
-          console.log("Tipo del ruolo:", typeof data.role);
-          console.log("Valore JSON del ruolo:", JSON.stringify(data.role));
-          
-          if (typeof data.role === 'string' && 
-              (data.role.toUpperCase() === "TRAINER" || data.role.toUpperCase() === "CLIENT")) {
+          if (
+            typeof data.role === "string" &&
+            (data.role.toUpperCase() === "TRAINER" ||
+              data.role.toUpperCase() === "CLIENT")
+          ) {
             setUserRole(data.role.toUpperCase() as "TRAINER" | "CLIENT");
           } else {
             console.error("Ruolo non valido ricevuto:", data.role);
             throw new Error("Ruolo utente non valido");
           }
         } else {
-          throw new Error(data.message || "Errore nel recupero dei dati utente");
+          throw new Error(
+            data.message || "Errore nel recupero dei dati utente"
+          );
         }
       } catch (error) {
         console.error("Errore completo:", error);

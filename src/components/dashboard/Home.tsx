@@ -1,6 +1,14 @@
-import React, { useState, useEffect } from 'react';
-import { Calendar, TrendingUp, Dumbbell, Target, Clock, Award } from 'lucide-react';
-import { API_BASE_URL } from '@/utils/config';
+import React, { useState, useEffect } from "react";
+import {
+  Calendar,
+  TrendingUp,
+  Dumbbell,
+  Target,
+  Clock,
+  Award,
+} from "lucide-react";
+import { API_BASE_URL } from "@/utils/config";
+import { getValidToken } from "@/utils/auth";
 
 interface Workout {
   id: number;
@@ -43,57 +51,81 @@ export default function Home() {
     nextWorkout: null,
     latestProgress: null,
     weeklyGoal: 3,
-    weeklyCompleted: 0
+    weeklyCompleted: 0,
   });
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     const fetchHomeData = async () => {
       try {
-        const token = localStorage.getItem('token');
-        
+        const token = getValidToken();
+        if (!token) {
+          console.error("Token non valido");
+          setLoading(false);
+          return;
+        }
+
         // Fetch workouts
         const workoutsResponse = await fetch(`${API_BASE_URL}/api/workouts`, {
-          headers: { Authorization: `Bearer ${token}` }
+          headers: { Authorization: `Bearer ${token}` },
         });
-        const workouts: Workout[] = await workoutsResponse.json();
-        
+
+        if (!workoutsResponse.ok) {
+          throw new Error(`Errore API workouts: ${workoutsResponse.status}`);
+        }
+
+        const workoutsData = await workoutsResponse.json();
+        const workouts: Workout[] = Array.isArray(workoutsData)
+          ? workoutsData
+          : [];
+
         // Fetch progress (se disponibile)
         let progressData: ProgressData[] = [];
         try {
           const progressResponse = await fetch(`${API_BASE_URL}/api/progress`, {
-            headers: { Authorization: `Bearer ${token}` }
+            headers: { Authorization: `Bearer ${token}` },
           });
           if (progressResponse.ok) {
-            progressData = await progressResponse.json();
+            const progressResponseData = await progressResponse.json();
+            progressData = Array.isArray(progressResponseData)
+              ? progressResponseData
+              : [];
           }
-        } catch {
-          console.log('Progress API non disponibile');
-        }
-        
+        } catch {}
+
         // Calcola statistiche
-        const completedWorkouts = workouts.filter(w => w.completed).length;
-        const nextWorkout = workouts
-          .filter(w => !w.completed)
-          .sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime())[0] || null;
-        
+        const completedWorkouts = workouts.filter((w) => w.completed).length;
+        const nextWorkout =
+          workouts
+            .filter((w) => !w.completed)
+            .sort(
+              (a, b) => new Date(a.date).getTime() - new Date(b.date).getTime()
+            )[0] || null;
+
         // Calcola allenamenti completati questa settimana
         const weekStart = new Date();
         weekStart.setDate(weekStart.getDate() - weekStart.getDay());
-        const weeklyCompleted = workouts.filter(w => 
-          w.completed && new Date(w.date) >= weekStart
+        const weeklyCompleted = workouts.filter(
+          (w) => w.completed && new Date(w.date) >= weekStart
         ).length;
-        
+
         setStats({
           totalWorkouts: workouts.length,
           completedWorkouts,
           nextWorkout,
           latestProgress: progressData[progressData.length - 1] || null,
           weeklyGoal: 3,
-          weeklyCompleted
+          weeklyCompleted,
         });
-      } catch (error) {
-        console.error('Errore nel caricamento dei dati home:', error);
+      } catch {
+        setStats({
+          totalWorkouts: 0,
+          completedWorkouts: 0,
+          nextWorkout: null,
+          latestProgress: null,
+          weeklyGoal: 3,
+          weeklyCompleted: 0,
+        });
       } finally {
         setLoading(false);
       }
@@ -115,13 +147,15 @@ export default function Home() {
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
-        <h1 className="text-3xl font-bold text-gray-900 dark:text-white">Dashboard</h1>
+        <h1 className="text-3xl font-bold text-gray-900 dark:text-white">
+          Dashboard
+        </h1>
         <div className="text-sm text-gray-500 dark:text-gray-400">
-          {new Date().toLocaleDateString('it-IT', { 
-            weekday: 'long', 
-            year: 'numeric', 
-            month: 'long', 
-            day: 'numeric' 
+          {new Date().toLocaleDateString("it-IT", {
+            weekday: "long",
+            year: "numeric",
+            month: "long",
+            day: "numeric",
           })}
         </div>
       </div>
@@ -134,8 +168,12 @@ export default function Home() {
               <Dumbbell className="h-6 w-6 text-blue-600 dark:text-blue-400" />
             </div>
             <div className="ml-4">
-              <p className="text-sm font-medium text-gray-600 dark:text-gray-400">Allenamenti Totali</p>
-              <p className="text-2xl font-bold text-gray-900 dark:text-white">{stats.totalWorkouts}</p>
+              <p className="text-sm font-medium text-gray-600 dark:text-gray-400">
+                Allenamenti Totali
+              </p>
+              <p className="text-2xl font-bold text-gray-900 dark:text-white">
+                {stats.totalWorkouts}
+              </p>
             </div>
           </div>
         </div>
@@ -146,8 +184,12 @@ export default function Home() {
               <Award className="h-6 w-6 text-green-600 dark:text-green-400" />
             </div>
             <div className="ml-4">
-              <p className="text-sm font-medium text-gray-600 dark:text-gray-400">Completati</p>
-              <p className="text-2xl font-bold text-gray-900 dark:text-white">{stats.completedWorkouts}</p>
+              <p className="text-sm font-medium text-gray-600 dark:text-gray-400">
+                Completati
+              </p>
+              <p className="text-2xl font-bold text-gray-900 dark:text-white">
+                {stats.completedWorkouts}
+              </p>
             </div>
           </div>
         </div>
@@ -158,8 +200,12 @@ export default function Home() {
               <Target className="h-6 w-6 text-purple-600 dark:text-purple-400" />
             </div>
             <div className="ml-4">
-              <p className="text-sm font-medium text-gray-600 dark:text-gray-400">Obiettivo Settimanale</p>
-              <p className="text-2xl font-bold text-gray-900 dark:text-white">{stats.weeklyCompleted}/{stats.weeklyGoal}</p>
+              <p className="text-sm font-medium text-gray-600 dark:text-gray-400">
+                Obiettivo Settimanale
+              </p>
+              <p className="text-2xl font-bold text-gray-900 dark:text-white">
+                {stats.weeklyCompleted}/{stats.weeklyGoal}
+              </p>
             </div>
           </div>
         </div>
@@ -170,9 +216,13 @@ export default function Home() {
               <TrendingUp className="h-6 w-6 text-orange-600 dark:text-orange-400" />
             </div>
             <div className="ml-4">
-              <p className="text-sm font-medium text-gray-600 dark:text-gray-400">Peso Attuale</p>
+              <p className="text-sm font-medium text-gray-600 dark:text-gray-400">
+                Peso Attuale
+              </p>
               <p className="text-2xl font-bold text-gray-900 dark:text-white">
-                {stats.latestProgress?.weight ? `${stats.latestProgress.weight}kg` : 'N/A'}
+                {stats.latestProgress?.weight
+                  ? `${stats.latestProgress.weight}kg`
+                  : "N/A"}
               </p>
             </div>
           </div>
@@ -186,13 +236,14 @@ export default function Home() {
           Progresso Settimanale
         </h3>
         <div className="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-3 mb-2">
-          <div 
+          <div
             className="bg-blue-600 h-3 rounded-full transition-all duration-300"
             style={{ width: `${Math.min(progressPercentage, 100)}%` }}
           ></div>
         </div>
         <p className="text-sm text-gray-600 dark:text-gray-400">
-          {stats.weeklyCompleted} di {stats.weeklyGoal} allenamenti completati questa settimana
+          {stats.weeklyCompleted} di {stats.weeklyGoal} allenamenti completati
+          questa settimana
           {progressPercentage >= 100 && " 🎉 Obiettivo raggiunto!"}
         </p>
       </div>
@@ -208,14 +259,20 @@ export default function Home() {
             <h4 className="font-semibold text-lg">{stats.nextWorkout.title}</h4>
             <p className="text-gray-600 dark:text-gray-400 mb-2">
               <Calendar className="h-4 w-4 inline mr-1" />
-              {new Date(stats.nextWorkout.date).toLocaleDateString('it-IT')}
+              {new Date(stats.nextWorkout.date).toLocaleDateString("it-IT")}
             </p>
             <div className="space-y-1">
-              {stats.nextWorkout.exercises.slice(0, 3).map((exercise, index) => (
-                <p key={index} className="text-sm text-gray-600 dark:text-gray-400">
-                  • {exercise.name} - {exercise.sets}x{exercise.reps} @ {exercise.weight}kg
-                </p>
-              ))}
+              {stats.nextWorkout.exercises
+                .slice(0, 3)
+                .map((exercise, index) => (
+                  <p
+                    key={index}
+                    className="text-sm text-gray-600 dark:text-gray-400"
+                  >
+                    • {exercise.name} - {exercise.sets}x{exercise.reps} @{" "}
+                    {exercise.weight}kg
+                  </p>
+                ))}
               {stats.nextWorkout.exercises.length > 3 && (
                 <p className="text-sm text-gray-500 dark:text-gray-500">
                   +{stats.nextWorkout.exercises.length - 3} altri esercizi...
@@ -227,22 +284,30 @@ export default function Home() {
       )}
 
       {/* Record personali recenti */}
-      {stats.latestProgress?.personalBests && stats.latestProgress.personalBests.length > 0 && (
-        <div className="bg-white dark:bg-gray-800 rounded-lg shadow-lg p-6">
-          <h3 className="text-lg font-semibold mb-4 flex items-center">
-            <Award className="h-5 w-5 mr-2 text-yellow-600" />
-            Record Personali
-          </h3>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            {stats.latestProgress.personalBests.slice(0, 3).map((pb, index) => (
-              <div key={index} className="text-center p-4 bg-gray-50 dark:bg-gray-700 rounded-lg">
-                <p className="font-semibold">{pb.exercise}</p>
-                <p className="text-2xl font-bold text-yellow-600">{pb.weight}kg</p>
-              </div>
-            ))}
+      {stats.latestProgress?.personalBests &&
+        stats.latestProgress.personalBests.length > 0 && (
+          <div className="bg-white dark:bg-gray-800 rounded-lg shadow-lg p-6">
+            <h3 className="text-lg font-semibold mb-4 flex items-center">
+              <Award className="h-5 w-5 mr-2 text-yellow-600" />
+              Record Personali
+            </h3>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              {stats.latestProgress.personalBests
+                .slice(0, 3)
+                .map((pb, index) => (
+                  <div
+                    key={index}
+                    className="text-center p-4 bg-gray-50 dark:bg-gray-700 rounded-lg"
+                  >
+                    <p className="font-semibold">{pb.exercise}</p>
+                    <p className="text-2xl font-bold text-yellow-600">
+                      {pb.weight}kg
+                    </p>
+                  </div>
+                ))}
+            </div>
           </div>
-        </div>
-      )}
+        )}
     </div>
   );
 }

@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 import { X, Trash2, Edit } from "lucide-react";
 import { API_BASE_URL } from "@/utils/config";
+import { getValidToken } from "@/utils/auth";
 import ClientDetails from "./ClientDetails";
 import ClientEditForm from "./ClientEditForm";
 
@@ -33,25 +34,30 @@ export default function ClientModal({
   const [editMode, setEditMode] = useState(false);
 
   const handleDeleteClient = async () => {
-    if (!confirm("Sei sicuro di voler rimuovere questo cliente?")) return;
-
-    try {
-      const token = localStorage.getItem("token");
-      const response = await fetch(
-        `${API_BASE_URL}/api/trainer/clients/${client.id}`,
-        {
-          method: "DELETE",
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
+    if (window.confirm("Sei sicuro di voler eliminare questo cliente?")) {
+      try {
+        const token = getValidToken();
+        if (!token) {
+          console.error("Token non valido");
+          return;
         }
-      );
 
-      if (response.ok) {
-        onDelete(client.id);
+        const response = await fetch(
+          `${API_BASE_URL}/api/trainer/clients/${client.id}`,
+          {
+            method: "DELETE",
+            headers: {
+              Authorization: `Bearer ${token}`,
+            },
+          }
+        );
+
+        if (response.ok) {
+          onDelete(client.id);
+        }
+      } catch (error) {
+        console.error("Errore nella rimozione del cliente:", error);
       }
-    } catch (error) {
-      console.error("Errore nella rimozione del cliente:", error);
     }
   };
 
@@ -65,7 +71,12 @@ export default function ClientModal({
     height?: string;
   }) => {
     try {
-      const token = localStorage.getItem("token");
+      const token = getValidToken();
+      if (!token) {
+        console.error("Token non valido");
+        return;
+      }
+
       const requestData = {
         firstName: formData.firstName,
         lastName: formData.lastName,

@@ -37,7 +37,6 @@ export default function ClientDashboard() {
       try {
         const token = getValidToken();
         if (!token) {
-          console.log("🔍 Token non disponibile, reindirizzamento al login");
           window.location.href = "/login";
           return;
         }
@@ -76,7 +75,6 @@ export default function ClientDashboard() {
       try {
         const token = getValidToken();
         if (!token) {
-          console.log("🔍 Token non disponibile per messaggi non letti");
           return;
         }
 
@@ -178,7 +176,6 @@ export default function ClientDashboard() {
     try {
       const token = getValidToken();
       if (!token) {
-        console.log("🔍 Token non disponibile per reset messaggi");
         return;
       }
 
@@ -341,8 +338,7 @@ export default function ClientDashboard() {
       {hasTrainer === false && (
         <SelectTrainerModal
           onClose={() => {}}
-          onSelect={(trainerId) => {
-            console.log("Trainer selezionato:", trainerId);
+          onSelect={() => {
             setHasTrainer(true);
           }}
         />

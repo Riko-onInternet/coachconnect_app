@@ -1,6 +1,7 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect } from "react";
 import { API_BASE_URL } from "@/utils/config";
-import WorkoutDetail from './WorkoutDetail';
+import { getValidToken } from "@/utils/auth";
+import WorkoutDetail from "./WorkoutDetail";
 
 interface Workout {
   id: string; // Cambiato da number a string
@@ -20,23 +21,40 @@ interface Exercise {
 export default function MyWorkouts() {
   const [workouts, setWorkouts] = useState<Workout[]>([]);
   const [loading, setLoading] = useState(true);
-  const [selectedWorkoutId, setSelectedWorkoutId] = useState<string | null>(null); // Cambiato da number a string
+  const [selectedWorkoutId, setSelectedWorkoutId] = useState<string | null>(
+    null
+  ); // Cambiato da number a string
 
   useEffect(() => {
     const fetchWorkouts = async () => {
       try {
-        const token = localStorage.getItem("token");
+        const token = getValidToken();
+        if (!token) {
+          console.error("Token non valido");
+          setLoading(false);
+          return;
+        }
+
         const response = await fetch(`${API_BASE_URL}/api/workouts`, {
           headers: {
             Authorization: `Bearer ${token}`,
           },
         });
+
+        if (!response.ok) {
+          throw new Error(`Errore API: ${response.status}`);
+        }
+
         const data = await response.json();
-        console.log('Dati ricevuti dal server:', data);
-        console.log('IDs disponibili:', data.map((w: { id: unknown; }) => w.id)); // Aggiungi questo log
-        setWorkouts(data);
+
+        // Verifica che data sia un array prima di usarlo
+        const workoutsArray = Array.isArray(data) ? data : [];
+
+        setWorkouts(workoutsArray);
       } catch (error) {
         console.error("Errore nel caricamento degli allenamenti:", error);
+        // Imposta un array vuoto in caso di errore
+        setWorkouts([]);
       } finally {
         setLoading(false);
       }
@@ -56,9 +74,9 @@ export default function MyWorkouts() {
   // Se è selezionato un workout, mostra la schermata dettagliata
   if (selectedWorkoutId) {
     return (
-      <WorkoutDetail 
-        workoutId={selectedWorkoutId} 
-        onBack={() => setSelectedWorkoutId(null)} 
+      <WorkoutDetail
+        workoutId={selectedWorkoutId}
+        onBack={() => setSelectedWorkoutId(null)}
       />
     );
   }
@@ -66,11 +84,12 @@ export default function MyWorkouts() {
   return (
     <div className="space-y-6">
       <h2 className="text-2xl font-bold">I Miei Allenamenti</h2>
-      
+
       {workouts.length === 0 ? (
         <div className="bg-white dark:bg-gray-800 rounded-lg shadow-lg p-6 text-center">
           <p className="text-gray-600 dark:text-gray-300">
-            Non hai ancora allenamenti assegnati. Il tuo trainer ti assegnerà presto un programma di allenamento.
+            Non hai ancora allenamenti assegnati. Il tuo trainer ti assegnerà
+            presto un programma di allenamento.
           </p>
         </div>
       ) : (
@@ -110,7 +129,7 @@ export default function MyWorkouts() {
                   </div>
                 ))}
               </div>
-              
+
               <div className="mt-4 pt-4 border-t border-gray-200 dark:border-gray-700">
                 <button className="w-full px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors">
                   Inizia Allenamento

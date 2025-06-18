@@ -9,7 +9,7 @@ import {
   Check,
   CheckCheck,
 } from "lucide-react";
-import { getValidToken } from "@/utils/auth";
+import { getValidToken } from "../../utils/auth";
 
 interface Chat {
   id: string;
@@ -65,7 +65,6 @@ export default function Messages() {
       try {
         const token = getValidToken();
         if (!token) {
-          console.log("🔍 Token non disponibile per caricamento chat");
           setChats([]);
           setLoading(false);
           return;
@@ -107,7 +106,12 @@ export default function Messages() {
     if (activeChat) {
       const fetchMessages = async () => {
         try {
-          const token = localStorage.getItem("token");
+          const token = getValidToken();
+          if (!token) {
+            console.error("Token non disponibile");
+            return;
+          }
+
           const response = await fetch(
             `${API_BASE_URL}/api/messages/${activeChat}`,
             {
@@ -116,6 +120,11 @@ export default function Messages() {
               },
             }
           );
+
+          if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
+          }
+
           const data = await response.json();
           setMessages(data);
         } catch (error) {
@@ -129,7 +138,11 @@ export default function Messages() {
 
   // Inizializza il socket una volta sola
   useEffect(() => {
-    const token = localStorage.getItem("token");
+    const token = getValidToken();
+    if (!token) {
+      return;
+    }
+
     const newSocket = io(API_BASE_URL, {
       auth: { token },
       reconnection: true,
@@ -138,7 +151,6 @@ export default function Messages() {
     });
 
     newSocket.on("connect", () => {
-      console.log("Connected to socket");
       newSocket.emit("join", getUserId());
     });
 
@@ -245,7 +257,7 @@ export default function Messages() {
   // Definizione della funzione handleChatClick
   const handleChatClick = (userId: string) => {
     setActiveChat(userId);
-    
+
     // Azzera immediatamente il contatore dei messaggi non letti per la chat selezionata
     setChats((prevChats) =>
       prevChats.map((chat) => {
@@ -258,7 +270,7 @@ export default function Messages() {
         return chat;
       })
     );
-    
+
     // Su dispositivi mobili, nascondi la lista delle chat quando si seleziona una chat
     if (window.innerWidth < 992) {
       setShowChatList(false);
@@ -269,15 +281,19 @@ export default function Messages() {
     if (activeChat) {
       const markMessagesAsRead = async () => {
         try {
-          const token = localStorage.getItem("token");
+          const token = getValidToken();
+          if (!token) {
+            return;
+          }
+
           await fetch(`${API_BASE_URL}/api/messages/${activeChat}/read`, {
             method: "PATCH",
             headers: {
               Authorization: `Bearer ${token}`,
             },
           });
-          
-          // Dopo aver marcato i messaggi come letti sul server, 
+
+          // Dopo aver marcato i messaggi come letti sul server,
           // assicurati che il contatore sia azzerato anche localmente
           setChats((prevChats) =>
             prevChats.map((chat) => {

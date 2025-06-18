@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { Notification } from "@/types/types";
 import { API_BASE_URL } from "@/utils/config";
+import { getValidToken } from "@/utils/auth";
 
 export default function Notifications() {
   const [notifications, setNotifications] = useState<Notification[]>([]);
@@ -9,7 +10,13 @@ export default function Notifications() {
   useEffect(() => {
     const fetchNotifications = async () => {
       try {
-        const token = localStorage.getItem("token");
+        const token = getValidToken();
+        if (!token) {
+          setNotifications([]);
+          setLoading(false);
+          return;
+        }
+
         const response = await fetch(`${API_BASE_URL}/api/notifications`, {
           headers: {
             Authorization: `Bearer ${token}`,
@@ -34,16 +41,17 @@ export default function Notifications() {
 
   const markAsRead = async (id: string) => {
     try {
-      const token = localStorage.getItem("token");
-      const response = await fetch(
-        `${API_BASE_URL}/api/notifications/${id}`,
-        {
-          method: "PATCH",
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        }
-      );
+      const token = getValidToken();
+      if (!token) {
+        return;
+      }
+
+      const response = await fetch(`${API_BASE_URL}/api/notifications/${id}`, {
+        method: "PATCH",
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
 
       if (!response.ok) {
         throw new Error("Errore nella marcatura della notifica come letta");
@@ -90,7 +98,9 @@ export default function Notifications() {
       setNotifications(notifications.filter((n) => n.id !== notificationId));
 
       // Mostra un messaggio di conferma
-      alert(accepted ? "Richiesta accettata con successo" : "Richiesta rifiutata");
+      alert(
+        accepted ? "Richiesta accettata con successo" : "Richiesta rifiutata"
+      );
     } catch (error) {
       console.error("Errore nella gestione della richiesta:", error);
     }

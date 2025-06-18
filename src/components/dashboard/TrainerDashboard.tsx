@@ -9,6 +9,7 @@ import { io } from "socket.io-client";
 import { getUserId } from "@/utils/auth";
 import { API_BASE_URL, SOCKET_URL } from "@/utils/config";
 import { Menu, X, LogOut, Users, Dumbbell, MessageCircle, Bell, Activity } from "lucide-react";
+import { getValidToken } from "../../utils/auth";
 
 export default function TrainerDashboard() {
   const router = useRouter();
@@ -25,7 +26,12 @@ export default function TrainerDashboard() {
   useEffect(() => {
     const checkInitialUnreadMessages = async () => {
       try {
-        const token = localStorage.getItem("token");
+        const token = getValidToken();
+        if (!token) {
+          console.error("Token non disponibile");
+          return;
+        }
+        
         const response = await fetch(
           `${API_BASE_URL}/api/messages/unread-count`,
           {
@@ -104,13 +110,26 @@ export default function TrainerDashboard() {
   // Modifica handleMessageTabClick
   const handleMessageTabClick = async () => {
     try {
-      const token = localStorage.getItem("token");
-      await fetch(`${API_BASE_URL}/api/messages/mark-all-read`, {
-        method: "POST",
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-      });
+      const token = getValidToken();
+      if (!token) {
+        console.error("Token non disponibile");
+        return;
+      }
+      
+      const response = await fetch(
+        `${API_BASE_URL}/api/messages/mark-all-read`,
+        {
+          method: "POST",
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
+      
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+      
       setUnreadMessages(0);
       // Resetta il conteggio in localStorage
       localStorage.setItem("unreadMessagesCount", "0");

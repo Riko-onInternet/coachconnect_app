@@ -9,6 +9,7 @@ import {
   Trash2,
 } from "lucide-react";
 import { API_BASE_URL } from "@/utils/config";
+import { getValidToken } from "@/utils/auth";
 import { Client, Exercise, ExerciseInPlan, WorkoutPlan } from "@/types/workout";
 
 interface ExerciseList {
@@ -51,10 +52,15 @@ export default function WorkoutPlans() {
     fetchWorkoutPlans();
   }, []);
 
-  // Nuova funzione per recuperare i piani di allenamento
+  // Funzione fetchWorkoutPlans
   const fetchWorkoutPlans = async () => {
     try {
-      const token = localStorage.getItem("token");
+      const token = getValidToken();
+      if (!token) {
+        console.error("Token non valido");
+        return;
+      }
+      
       const response = await fetch(
         `${API_BASE_URL}/api/trainer/workout-plans`,
         {
@@ -63,21 +69,32 @@ export default function WorkoutPlans() {
           },
         }
       );
+      
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+      
       const data = await response.json();
       setWorkoutPlans(data);
     } catch (error) {
       console.error("Errore nel caricamento dei piani di allenamento:", error);
+      setWorkoutPlans([]);
     }
   };
 
-  // Funzione per eliminare un piano di allenamento
+  // Funzione handleDeleteWorkoutPlan
   const handleDeleteWorkoutPlan = async (planId: string) => {
     if (!confirm("Sei sicuro di voler ritirare questo piano di allenamento?")) {
       return;
     }
-
+  
     try {
-      const token = localStorage.getItem("token");
+      const token = getValidToken();
+      if (!token) {
+        alert("Token non valido. Effettua nuovamente il login.");
+        return;
+      }
+      
       const response = await fetch(
         `${API_BASE_URL}/api/trainer/workout-plans/${planId}`,
         {
@@ -87,13 +104,12 @@ export default function WorkoutPlans() {
           },
         }
       );
-
+  
       if (response.ok) {
         alert("Piano di allenamento ritirato con successo!");
-        // Rimuovi il piano dalla lista locale
         setWorkoutPlans(workoutPlans.filter((plan) => plan.id !== planId));
       } else {
-        alert("Errore nel ritiro del piano di allenamento");
+        throw new Error(`HTTP error! status: ${response.status}`);
       }
     } catch (error) {
       console.error("Errore nel ritiro del piano:", error);
@@ -101,23 +117,31 @@ export default function WorkoutPlans() {
     }
   };
 
-  // Funzione per ottenere i piani di un cliente specifico
-  const getClientWorkoutPlans = (clientId: string) => {
-    return workoutPlans.filter((plan) => plan.clientId === clientId);
-  };
-
+  // Funzione fetchClients
   const fetchClients = async () => {
     try {
-      const token = localStorage.getItem("token");
+      const token = getValidToken();
+      if (!token) {
+        console.error("Token non valido");
+        setLoading(false);
+        return;
+      }
+      
       const response = await fetch(`${API_BASE_URL}/api/trainer/clients`, {
         headers: {
           Authorization: `Bearer ${token}`,
         },
       });
+      
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+      
       const data = await response.json();
-      setClients(data);
+      setClients(Array.isArray(data) ? data : []);
     } catch (error) {
       console.error("Errore nel caricamento dei clienti:", error);
+      setClients([]);
     } finally {
       setLoading(false);
     }
@@ -126,22 +150,38 @@ export default function WorkoutPlans() {
 
   const fetchExercises = async () => {
     try {
-      const token = localStorage.getItem("token");
+      const token = getValidToken();
+      if (!token) {
+        console.error("Token non valido");
+        return;
+      }
+      
       const response = await fetch(`${API_BASE_URL}/api/exercises`, {
         headers: {
           Authorization: `Bearer ${token}`,
         },
       });
+      
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+      
       const data = await response.json();
-      setExercises(data);
+      setExercises(Array.isArray(data) ? data : []);
     } catch (error) {
       console.error("Errore nel caricamento degli esercizi:", error);
+      setExercises([]);
     }
   };
 
   const fetchExerciseLists = async () => {
     try {
-      const token = localStorage.getItem("token");
+      const token = getValidToken();
+      if (!token) {
+        console.error("Token non valido");
+        return;
+      }
+      
       const response = await fetch(
         `${API_BASE_URL}/api/trainer/exercise-lists`,
         {
@@ -150,10 +190,16 @@ export default function WorkoutPlans() {
           },
         }
       );
+      
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+      
       const data = await response.json();
-      setExerciseLists(data);
+      setExerciseLists(Array.isArray(data) ? data : []);
     } catch (error) {
       console.error("Errore nel caricamento delle liste esercizi:", error);
+      setExerciseLists([]);
     }
   };
 
@@ -162,7 +208,12 @@ export default function WorkoutPlans() {
     if (!selectedClient) return;
 
     try {
-      const token = localStorage.getItem("token");
+      const token = getValidToken();
+      if (!token) {
+        alert("Token non valido. Effettua nuovamente il login.");
+        return;
+      }
+      
       const response = await fetch(
         `${API_BASE_URL}/api/trainer/exercise-lists`,
         {
@@ -184,9 +235,12 @@ export default function WorkoutPlans() {
         setExerciseLists([...exerciseLists, newList]);
         setListFormData({ name: "" });
         setShowCreateListModal(false);
+      } else {
+        throw new Error(`HTTP error! status: ${response.status}`);
       }
     } catch (error) {
       console.error("Errore nella creazione della lista:", error);
+      alert("Errore nella creazione della lista");
     }
   };
 
@@ -214,7 +268,12 @@ export default function WorkoutPlans() {
     };
 
     try {
-      const token = localStorage.getItem("token");
+      const token = getValidToken();
+      if (!token) {
+        alert("Token non valido. Effettua nuovamente il login.");
+        return;
+      }
+      
       const response = await fetch(
         `${API_BASE_URL}/api/trainer/exercise-lists/${selectedList.id}/exercises`,
         {
@@ -226,6 +285,10 @@ export default function WorkoutPlans() {
           body: JSON.stringify(newExercise),
         }
       );
+
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
 
       if (response.ok) {
         const updatedList = await response.json();
@@ -250,6 +313,11 @@ export default function WorkoutPlans() {
 
   const getClientLists = (clientId: string) => {
     return exerciseLists.filter((list) => list.clientId === clientId);
+  };
+
+  // Aggiungi questa funzione mancante
+  const getClientWorkoutPlans = (clientId: string) => {
+    return workoutPlans.filter((plan) => plan.clientId === clientId);
   };
 
   const removeExercise = async (listId: string, exerciseIndex: number) => {
@@ -281,9 +349,14 @@ export default function WorkoutPlans() {
   // Funzione per assegnare un piano di allenamento
   const assignWorkoutPlan = async (list: ExerciseList, clientId: string) => {
     if (!selectedClient) return;
-
+  
     try {
-      const token = localStorage.getItem("token");
+      const token = getValidToken();
+      if (!token) {
+        console.error("Token non valido");
+        return;
+      }
+      
       const response = await fetch(
         `${API_BASE_URL}/api/trainer/workout-plans`,
         {

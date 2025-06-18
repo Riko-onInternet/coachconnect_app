@@ -2,6 +2,7 @@
 import { useState, useEffect } from "react";
 import { Pen, Trash2, Plus, Search, Filter, X, SearchX } from "lucide-react";
 import { API_BASE_URL } from "@/utils/config";
+import { getValidToken } from "@/utils/auth";
 
 interface Exercise {
   id: string;
@@ -33,39 +34,65 @@ export default function Exercises() {
 
   useEffect(() => {
     // Estrai tutti i gruppi muscolari unici dagli esercizi
-    const uniqueMuscleGroups = [...new Set(exercises.map(ex => ex.muscleGroup))];
+    const uniqueMuscleGroups = [
+      ...new Set(exercises.map((ex) => ex.muscleGroup)),
+    ];
     setMuscleGroups(uniqueMuscleGroups);
-    
+
     // Filtra gli esercizi in base al termine di ricerca e al gruppo muscolare selezionato
     let filtered = [...exercises];
-    
+
     if (searchTerm) {
-      filtered = filtered.filter(ex => 
-        ex.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        ex.description?.toLowerCase().includes(searchTerm.toLowerCase())
+      filtered = filtered.filter(
+        (ex) =>
+          ex.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+          ex.description?.toLowerCase().includes(searchTerm.toLowerCase())
       );
     }
-    
+
     if (selectedMuscleGroup) {
-      filtered = filtered.filter(ex => ex.muscleGroup === selectedMuscleGroup);
+      filtered = filtered.filter(
+        (ex) => ex.muscleGroup === selectedMuscleGroup
+      );
     }
-    
+
     setFilteredExercises(filtered);
   }, [exercises, searchTerm, selectedMuscleGroup]);
 
   const fetchExercises = async () => {
     try {
-      const token = localStorage.getItem("token");
+      const token = getValidToken();
+      if (!token) {
+        console.error("Token non disponibile");
+        setLoading(false);
+        return;
+      }
+
       const response = await fetch(`${API_BASE_URL}/api/exercises`, {
         headers: {
           Authorization: `Bearer ${token}`,
         },
       });
+
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+
       const data = await response.json();
-      setExercises(data);
-      setFilteredExercises(data);
+
+      // Controlla se data è un array valido
+      if (Array.isArray(data)) {
+        setExercises(data);
+        setFilteredExercises(data);
+      } else {
+        console.error("La risposta non è un array valido:", data);
+        setExercises([]);
+        setFilteredExercises([]);
+      }
     } catch (error) {
       console.error("Errore nel caricamento degli esercizi:", error);
+      setExercises([]);
+      setFilteredExercises([]);
     } finally {
       setLoading(false);
     }
@@ -73,7 +100,12 @@ export default function Exercises() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    const token = localStorage.getItem("token");
+    const token = getValidToken();
+    if (!token) {
+      console.error("Token non disponibile");
+      return;
+    }
+
     try {
       const url = editingExercise
         ? `${API_BASE_URL}/api/exercises/${editingExercise.id}`
@@ -104,16 +136,18 @@ export default function Exercises() {
     if (!confirm("Sei sicuro di voler eliminare questo esercizio?")) return;
 
     try {
-      const token = localStorage.getItem("token");
-      const response = await fetch(
-        `${API_BASE_URL}/api/exercises/${id}`,
-        {
-          method: "DELETE",
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        }
-      );
+      const token = getValidToken();
+      if (!token) {
+        console.error("Token non disponibile");
+        return;
+      }
+
+      const response = await fetch(`${API_BASE_URL}/api/exercises/${id}`, {
+        method: "DELETE",
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
 
       if (response.ok) {
         setExercises(exercises.filter((ex) => ex.id !== id));
@@ -151,7 +185,9 @@ export default function Exercises() {
     <div className="container mx-auto px-4 py-6">
       {/* Header con titolo e pulsante aggiungi */}
       <div className="flex flex-col md:flex-row md:justify-between md:items-center gap-4 mb-8">
-        <h2 className="text-2xl font-bold text-gray-800 dark:text-white">Esercizi</h2>
+        <h2 className="text-2xl font-bold text-gray-800 dark:text-white">
+          Esercizi
+        </h2>
         <button
           onClick={() => {
             setEditingExercise(null);
@@ -184,7 +220,7 @@ export default function Exercises() {
               className="pl-10 w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:text-white"
             />
           </div>
-          
+
           <div className="relative">
             <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
               <Filter size={18} className="text-gray-400" />
@@ -195,14 +231,16 @@ export default function Exercises() {
               className="pl-10 w-full md:w-48 px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:text-white appearance-none"
             >
               <option value="">Tutti i gruppi</option>
-              {muscleGroups.map(group => (
-                <option key={group} value={group}>{group}</option>
+              {muscleGroups.map((group) => (
+                <option key={group} value={group}>
+                  {group}
+                </option>
               ))}
             </select>
           </div>
-          
+
           {(searchTerm || selectedMuscleGroup) && (
-            <button 
+            <button
               onClick={resetFilters}
               className="flex items-center justify-center gap-1 px-4 py-2 bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-200 rounded-lg hover:bg-gray-300 dark:hover:bg-gray-600 transition-colors"
             >
@@ -214,7 +252,10 @@ export default function Exercises() {
 
       {/* Contatore risultati */}
       <p className="text-gray-600 dark:text-gray-400 mb-4">
-        {filteredExercises.length} {filteredExercises.length === 1 ? 'esercizio trovato' : 'esercizi trovati'}
+        {filteredExercises.length}{" "}
+        {filteredExercises.length === 1
+          ? "esercizio trovato"
+          : "esercizi trovati"}
       </p>
 
       {/* Griglia degli esercizi */}
@@ -227,10 +268,10 @@ export default function Exercises() {
             >
               <div className="relative h-48 overflow-hidden bg-gray-100 dark:bg-gray-700">
                 {exercise.image ? (
-                  <img 
-                    src={exercise.image} 
-                    alt={exercise.name} 
-                    className="w-full h-full object-cover transition-transform duration-300 hover:scale-105" 
+                  <img
+                    src={exercise.image}
+                    alt={exercise.name}
+                    className="w-full h-full object-cover transition-transform duration-300 hover:scale-105"
                   />
                 ) : (
                   <div className="w-full h-full flex items-center justify-center text-gray-400 dark:text-gray-500">
@@ -241,17 +282,19 @@ export default function Exercises() {
                   {exercise.muscleGroup}
                 </div>
               </div>
-              
+
               <div className="p-5 flex-grow flex flex-col">
-                <h3 className="text-xl font-semibold text-gray-800 dark:text-white mb-2">{exercise.name}</h3>
+                <h3 className="text-xl font-semibold text-gray-800 dark:text-white mb-2">
+                  {exercise.name}
+                </h3>
                 {exercise.description && (
                   <p className="text-gray-600 dark:text-gray-400 mb-4 flex-grow">
-                    {exercise.description.length > 100 
-                      ? `${exercise.description.substring(0, 100)}...` 
+                    {exercise.description.length > 100
+                      ? `${exercise.description.substring(0, 100)}...`
                       : exercise.description}
                   </p>
                 )}
-                
+
                 <div className="flex justify-between gap-2 mt-4">
                   <button
                     onClick={() => handleEdit(exercise)}
@@ -275,9 +318,13 @@ export default function Exercises() {
           <div className="text-gray-400 dark:text-gray-500 mb-4">
             <SearchX size={64} strokeWidth={1} />
           </div>
-          <h3 className="text-lg font-medium text-gray-700 dark:text-gray-300">Nessun esercizio trovato</h3>
-          <p className="text-gray-500 dark:text-gray-400 mt-1">Prova a modificare i filtri di ricerca</p>
-          <button 
+          <h3 className="text-lg font-medium text-gray-700 dark:text-gray-300">
+            Nessun esercizio trovato
+          </h3>
+          <p className="text-gray-500 dark:text-gray-400 mt-1">
+            Prova a modificare i filtri di ricerca
+          </p>
+          <button
             onClick={resetFilters}
             className="mt-4 px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors"
           >
@@ -294,17 +341,19 @@ export default function Exercises() {
               <h3 className="text-xl font-semibold text-gray-800 dark:text-white">
                 {editingExercise ? "Modifica Esercizio" : "Nuovo Esercizio"}
               </h3>
-              <button 
+              <button
                 onClick={() => setShowAddModal(false)}
                 className="text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200"
               >
                 <X size={20} />
               </button>
             </div>
-            
+
             <form onSubmit={handleSubmit} className="space-y-5">
               <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Nome</label>
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                  Nome
+                </label>
                 <input
                   type="text"
                   value={formData.name}
@@ -357,12 +406,13 @@ export default function Exercises() {
                 />
                 {formData.image && (
                   <div className="mt-2 h-32 rounded-lg overflow-hidden bg-gray-100 dark:bg-gray-700">
-                    <img 
-                      src={formData.image} 
-                      alt="Anteprima" 
-                      className="w-full h-full object-cover" 
+                    <img
+                      src={formData.image}
+                      alt="Anteprima"
+                      className="w-full h-full object-cover"
                       onError={(e) => {
-                        (e.target as HTMLImageElement).src = 'https://via.placeholder.com/300x200?text=Immagine+non+disponibile';
+                        (e.target as HTMLImageElement).src =
+                          "https://via.placeholder.com/300x200?text=Immagine+non+disponibile";
                       }}
                     />
                   </div>
