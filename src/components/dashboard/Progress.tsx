@@ -1,3 +1,5 @@
+/* eslint-disable react-hooks/exhaustive-deps */
+/* eslint-disable @typescript-eslint/no-unused-vars */
 import React, { useState, useEffect } from "react";
 import {
   LineChart,
@@ -19,8 +21,6 @@ import {
   PolarRadiusAxis,
   Radar,
 } from "recharts";
-import { API_BASE_URL } from "@/utils/config";
-import { getValidToken } from "@/utils/auth";
 import { Dumbbell, Calendar, TrendingUp, Award } from "lucide-react";
 
 interface WeightData {
@@ -102,19 +102,73 @@ const mockProgressData: ProgressResponse = {
   ],
   bodyFat: [], // Incluso nei dati di peso
   personalBests: [
-    { exercise: "Panca Piana", weight: 90, reps: 5, achievedAt: "2023-06-15", muscleGroup: "Petto" },
-    { exercise: "Squat", weight: 120, reps: 3, achievedAt: "2023-05-20", muscleGroup: "Gambe" },
-    { exercise: "Stacco da Terra", weight: 140, reps: 2, achievedAt: "2023-04-10", muscleGroup: "Schiena" },
-    { exercise: "Military Press", weight: 60, reps: 6, achievedAt: "2023-03-05", muscleGroup: "Spalle" },
-    { exercise: "Curl con Bilanciere", weight: 45, reps: 8, achievedAt: "2023-02-18", muscleGroup: "Bicipiti" },
+    {
+      exercise: "Panca Piana",
+      weight: 90,
+      reps: 5,
+      achievedAt: "2023-06-15",
+      muscleGroup: "Petto",
+    },
+    {
+      exercise: "Squat",
+      weight: 120,
+      reps: 3,
+      achievedAt: "2023-05-20",
+      muscleGroup: "Gambe",
+    },
+    {
+      exercise: "Stacco da Terra",
+      weight: 140,
+      reps: 2,
+      achievedAt: "2023-04-10",
+      muscleGroup: "Schiena",
+    },
+    {
+      exercise: "Military Press",
+      weight: 60,
+      reps: 6,
+      achievedAt: "2023-03-05",
+      muscleGroup: "Spalle",
+    },
+    {
+      exercise: "Curl con Bilanciere",
+      weight: 45,
+      reps: 8,
+      achievedAt: "2023-02-18",
+      muscleGroup: "Bicipiti",
+    },
   ],
   muscleGroups: [
-    { name: "Petto", value: 12, exercises: ["Panca Piana", "Panca Inclinata", "Croci con Manubri"] },
-    { name: "Schiena", value: 15, exercises: ["Stacco da Terra", "Trazioni", "Rematore", "Pulley"] },
-    { name: "Gambe", value: 18, exercises: ["Squat", "Leg Press", "Affondi", "Leg Extension", "Leg Curl"] },
-    { name: "Spalle", value: 10, exercises: ["Military Press", "Alzate Laterali", "Alzate Frontali"] },
-    { name: "Braccia", value: 8, exercises: ["Curl con Bilanciere", "Estensioni al Cavo", "Dips"] },
-    { name: "Addominali", value: 6, exercises: ["Crunch", "Plank", "Leg Raise"] },
+    {
+      name: "Petto",
+      value: 12,
+      exercises: ["Panca Piana", "Panca Inclinata", "Croci con Manubri"],
+    },
+    {
+      name: "Schiena",
+      value: 15,
+      exercises: ["Stacco da Terra", "Trazioni", "Rematore", "Pulley"],
+    },
+    {
+      name: "Gambe",
+      value: 18,
+      exercises: ["Squat", "Leg Press", "Affondi", "Leg Extension", "Leg Curl"],
+    },
+    {
+      name: "Spalle",
+      value: 10,
+      exercises: ["Military Press", "Alzate Laterali", "Alzate Frontali"],
+    },
+    {
+      name: "Braccia",
+      value: 8,
+      exercises: ["Curl con Bilanciere", "Estensioni al Cavo", "Dips"],
+    },
+    {
+      name: "Addominali",
+      value: 6,
+      exercises: ["Crunch", "Plank", "Leg Raise"],
+    },
   ],
   workoutFrequency: [
     { day: "Lunedì", count: 4 },
@@ -130,68 +184,111 @@ const mockProgressData: ProgressResponse = {
       exercise: "Panca Piana",
       muscleGroup: "Petto",
       dates: [
-        "2022-01-15", "2022-02-15", "2022-03-15", "2022-04-15", "2022-05-15", 
-        "2022-06-15", "2022-07-15", "2022-08-15", "2022-09-15", "2022-10-15", 
-        "2022-11-15", "2022-12-15", "2023-01-15", "2023-02-15", "2023-03-15", 
-        "2023-04-15", "2023-05-15", "2023-06-15", "2023-07-15", "2023-08-15"
+        "2022-01-15",
+        "2022-02-15",
+        "2022-03-15",
+        "2022-04-15",
+        "2022-05-15",
+        "2022-06-15",
+        "2022-07-15",
+        "2022-08-15",
+        "2022-09-15",
+        "2022-10-15",
+        "2022-11-15",
+        "2022-12-15",
+        "2023-01-15",
+        "2023-02-15",
+        "2023-03-15",
+        "2023-04-15",
+        "2023-05-15",
+        "2023-06-15",
+        "2023-07-15",
+        "2023-08-15",
       ],
       weights: [
-        70, 72.5, 70, 75, 72.5, 77.5, 75, 80, 77.5, 82.5, 
-        80, 85, 82.5, 87.5, 85, 87.5, 85, 90, 87.5, 95
+        70, 72.5, 70, 75, 72.5, 77.5, 75, 80, 77.5, 82.5, 80, 85, 82.5, 87.5,
+        85, 87.5, 85, 90, 87.5, 95,
       ],
-      reps: [
-        5, 4, 5, 4, 5, 4, 5, 4, 5, 4, 
-        5, 4, 5, 4, 5, 4, 5, 4, 5, 4
-      ],
+      reps: [5, 4, 5, 4, 5, 4, 5, 4, 5, 4, 5, 4, 5, 4, 5, 4, 5, 4, 5, 4],
     },
     {
       exercise: "Squat",
       muscleGroup: "Gambe",
       dates: [
-        "2022-01-20", "2022-02-20", "2022-03-20", "2022-04-20", "2022-05-20", 
-        "2022-06-20", "2022-07-20", "2022-08-20", "2022-09-20", "2022-10-20", 
-        "2022-11-20", "2022-12-20", "2023-01-20", "2023-02-20", "2023-03-20", 
-        "2023-04-20", "2023-05-20", "2023-06-20", "2023-07-20", "2023-08-20"
+        "2022-01-20",
+        "2022-02-20",
+        "2022-03-20",
+        "2022-04-20",
+        "2022-05-20",
+        "2022-06-20",
+        "2022-07-20",
+        "2022-08-20",
+        "2022-09-20",
+        "2022-10-20",
+        "2022-11-20",
+        "2022-12-20",
+        "2023-01-20",
+        "2023-02-20",
+        "2023-03-20",
+        "2023-04-20",
+        "2023-05-20",
+        "2023-06-20",
+        "2023-07-20",
+        "2023-08-20",
       ],
       weights: [
-        90, 92.5, 90, 95, 92.5, 97.5, 95, 100, 97.5, 102.5, 
-        100, 105, 102.5, 107.5, 105, 110, 107.5, 115, 112.5, 120
+        90, 92.5, 90, 95, 92.5, 97.5, 95, 100, 97.5, 102.5, 100, 105, 102.5,
+        107.5, 105, 110, 107.5, 115, 112.5, 120,
       ],
-      reps: [
-        5, 4, 5, 4, 5, 4, 5, 4, 5, 4, 
-        5, 4, 5, 4, 5, 4, 5, 3, 4, 3
-      ],
+      reps: [5, 4, 5, 4, 5, 4, 5, 4, 5, 4, 5, 4, 5, 4, 5, 4, 5, 3, 4, 3],
     },
     {
       exercise: "Stacco da Terra",
       muscleGroup: "Schiena",
       dates: [
-        "2022-01-25", "2022-02-25", "2022-03-25", "2022-04-25", "2022-05-25", 
-        "2022-06-25", "2022-07-25", "2022-08-25", "2022-09-25", "2022-10-25", 
-        "2022-11-25", "2022-12-25", "2023-01-25", "2023-02-25", "2023-03-25", 
-        "2023-04-25", "2023-05-25", "2023-06-25", "2023-07-25", "2023-08-25"
+        "2022-01-25",
+        "2022-02-25",
+        "2022-03-25",
+        "2022-04-25",
+        "2022-05-25",
+        "2022-06-25",
+        "2022-07-25",
+        "2022-08-25",
+        "2022-09-25",
+        "2022-10-25",
+        "2022-11-25",
+        "2022-12-25",
+        "2023-01-25",
+        "2023-02-25",
+        "2023-03-25",
+        "2023-04-25",
+        "2023-05-25",
+        "2023-06-25",
+        "2023-07-25",
+        "2023-08-25",
       ],
       weights: [
-        110, 112.5, 110, 115, 112.5, 117.5, 115, 120, 117.5, 122.5, 
-        120, 125, 122.5, 127.5, 125, 130, 127.5, 135, 132.5, 140
+        110, 112.5, 110, 115, 112.5, 117.5, 115, 120, 117.5, 122.5, 120, 125,
+        122.5, 127.5, 125, 130, 127.5, 135, 132.5, 140,
       ],
-      reps: [
-        3, 2, 3, 2, 3, 2, 3, 2, 3, 2, 
-        3, 2, 3, 2, 3, 2, 3, 2, 3, 1
-      ],
+      reps: [3, 2, 3, 2, 3, 2, 3, 2, 3, 2, 3, 2, 3, 2, 3, 2, 3, 2, 3, 1],
     },
   ],
 };
 
 export default function Progress() {
-  const [progressData, setProgressData] = useState<ProgressResponse>(mockProgressData);
+  const [progressData, setProgressData] =
+    useState<ProgressResponse>(mockProgressData);
   const [loading, setLoading] = useState(false); // Impostato a false poiché i dati sono locali
   const [error, setError] = useState<string | null>(null);
   const [selectedExercise, setSelectedExercise] = useState<string | null>(null);
 
   useEffect(() => {
     // Se ci sono dati di esercizi, seleziona il primo come default
-    if (progressData.exerciseProgress && progressData.exerciseProgress.length > 0) {
+    if (
+      progressData.exerciseProgress &&
+      progressData.exerciseProgress.length > 0
+    ) {
       setSelectedExercise(progressData.exerciseProgress[0].exercise);
     }
   }, []);
@@ -209,8 +306,8 @@ export default function Progress() {
       <div className="flex items-center justify-center h-64">
         <div className="text-center">
           <p className="text-red-500 mb-4">{error}</p>
-          <button 
-            onClick={() => window.location.reload()} 
+          <button
+            onClick={() => window.location.reload()}
             className="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600"
           >
             Riprova
@@ -221,14 +318,20 @@ export default function Progress() {
   }
 
   const hasWeightData = progressData.weight && progressData.weight.length > 0;
-  const hasPersonalBests = progressData.personalBests && progressData.personalBests.length > 0;
-  const hasMuscleGroupData = progressData.muscleGroups && progressData.muscleGroups.length > 0;
-  const hasWorkoutFrequency = progressData.workoutFrequency && progressData.workoutFrequency.length > 0;
-  const hasExerciseProgress = progressData.exerciseProgress && progressData.exerciseProgress.length > 0;
+  const hasPersonalBests =
+    progressData.personalBests && progressData.personalBests.length > 0;
+  const hasMuscleGroupData =
+    progressData.muscleGroups && progressData.muscleGroups.length > 0;
+  const hasWorkoutFrequency =
+    progressData.workoutFrequency && progressData.workoutFrequency.length > 0;
+  const hasExerciseProgress =
+    progressData.exerciseProgress && progressData.exerciseProgress.length > 0;
 
   // Trova i dati dell'esercizio selezionato
   const selectedExerciseData = hasExerciseProgress
-    ? progressData.exerciseProgress.find(ex => ex.exercise === selectedExercise)
+    ? progressData.exerciseProgress.find(
+        (ex) => ex.exercise === selectedExercise
+      )
     : null;
 
   // Prepara i dati per il grafico dell'esercizio selezionato
@@ -242,7 +345,9 @@ export default function Progress() {
 
   return (
     <div className="space-y-8 p-6">
-      <h2 className="text-2xl font-bold text-gray-900 dark:text-white">I Miei Progressi</h2>
+      <h2 className="text-2xl font-bold text-gray-900 dark:text-white">
+        I Miei Progressi
+      </h2>
 
       {/* Statistiche Rapide */}
       <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
@@ -254,10 +359,15 @@ export default function Progress() {
             Peso Attuale
           </h4>
           <p className="text-3xl font-bold text-gray-900 dark:text-white">
-            {hasWeightData ? `${progressData.weight[progressData.weight.length - 1]?.weight || 'N/A'} kg` : 'N/A'}
+            {hasWeightData
+              ? `${
+                  progressData.weight[progressData.weight.length - 1]?.weight ||
+                  "N/A"
+                } kg`
+              : "N/A"}
           </p>
         </div>
-        
+
         <div className="bg-white dark:bg-gray-800 rounded-lg shadow-lg p-6 text-center">
           <div className="flex justify-center mb-3">
             <Dumbbell className="h-8 w-8 text-emerald-500" />
@@ -269,7 +379,7 @@ export default function Progress() {
             {progressData.personalBests.length}
           </p>
         </div>
-        
+
         <div className="bg-white dark:bg-gray-800 rounded-lg shadow-lg p-6 text-center">
           <div className="flex justify-center mb-3">
             <Calendar className="h-8 w-8 text-amber-500" />
@@ -278,10 +388,15 @@ export default function Progress() {
             Allenamenti Settimanali
           </h4>
           <p className="text-3xl font-bold text-gray-900 dark:text-white">
-            {hasWorkoutFrequency ? progressData.workoutFrequency.reduce((sum, day) => sum + day.count, 0) : 'N/A'}
+            {hasWorkoutFrequency
+              ? progressData.workoutFrequency.reduce(
+                  (sum, day) => sum + day.count,
+                  0
+                )
+              : "N/A"}
           </p>
         </div>
-        
+
         <div className="bg-white dark:bg-gray-800 rounded-lg shadow-lg p-6 text-center">
           <div className="flex justify-center mb-3">
             <Award className="h-8 w-8 text-violet-500" />
@@ -290,14 +405,18 @@ export default function Progress() {
             Gruppo Muscolare Principale
           </h4>
           <p className="text-3xl font-bold text-gray-900 dark:text-white">
-            {hasMuscleGroupData ? progressData.muscleGroups[0]?.name || 'N/A' : 'N/A'}
+            {hasMuscleGroupData
+              ? progressData.muscleGroups[0]?.name || "N/A"
+              : "N/A"}
           </p>
         </div>
       </div>
 
       {/* Grafico del peso */}
       <div className="bg-white dark:bg-gray-800 rounded-lg shadow-lg p-6">
-        <h3 className="text-lg font-semibold mb-4 text-gray-900 dark:text-white">Andamento Peso</h3>
+        <h3 className="text-lg font-semibold mb-4 text-gray-900 dark:text-white">
+          Andamento Peso
+        </h3>
         {hasWeightData ? (
           <div className="w-full overflow-x-auto">
             <ResponsiveContainer width="100%" height={400}>
@@ -306,26 +425,30 @@ export default function Progress() {
                 margin={{ top: 20, right: 30, left: 20, bottom: 20 }}
               >
                 <CartesianGrid strokeDasharray="3 3" className="opacity-30" />
-                <XAxis 
-                  dataKey="date" 
+                <XAxis
+                  dataKey="date"
                   tick={{ fontSize: 12 }}
                   tickFormatter={(value) => {
                     const date = new Date(value);
                     return `${date.getDate()}/${date.getMonth() + 1}`;
                   }}
                 />
-                <YAxis 
+                <YAxis
                   tick={{ fontSize: 12 }}
-                  label={{ value: 'Peso (kg)', angle: -90, position: 'insideLeft' }}
+                  label={{
+                    value: "Peso (kg)",
+                    angle: -90,
+                    position: "insideLeft",
+                  }}
                 />
-                <Tooltip 
+                <Tooltip
                   labelFormatter={(value) => {
                     const date = new Date(value);
-                    return date.toLocaleDateString('it-IT');
+                    return date.toLocaleDateString("it-IT");
                   }}
                   formatter={(value: number, name: string) => [
-                    `${value} ${name.includes('Peso') ? 'kg' : '%'}`,
-                    name
+                    `${value} ${name.includes("Peso") ? "kg" : "%"}`,
+                    name,
                   ]}
                 />
                 <Legend />
@@ -334,16 +457,16 @@ export default function Progress() {
                   dataKey="weight"
                   stroke="#3B82F6"
                   strokeWidth={2}
-                  dot={{ fill: '#3B82F6', strokeWidth: 2, r: 4 }}
+                  dot={{ fill: "#3B82F6", strokeWidth: 2, r: 4 }}
                   name="Peso (kg)"
                 />
-                {progressData.weight.some(item => item.bodyFat) && (
+                {progressData.weight.some((item) => item.bodyFat) && (
                   <Line
                     type="monotone"
                     dataKey="bodyFat"
                     stroke="#10B981"
                     strokeWidth={2}
-                    dot={{ fill: '#10B981', strokeWidth: 2, r: 4 }}
+                    dot={{ fill: "#10B981", strokeWidth: 2, r: 4 }}
                     name="Grasso Corporeo (%)"
                   />
                 )}
@@ -352,7 +475,9 @@ export default function Progress() {
           </div>
         ) : (
           <div className="text-center py-12">
-            <p className="text-gray-500 dark:text-gray-400">Nessun dato di peso disponibile</p>
+            <p className="text-gray-500 dark:text-gray-400">
+              Nessun dato di peso disponibile
+            </p>
             <p className="text-sm text-gray-400 dark:text-gray-500 mt-2">
               Inizia a registrare i tuoi progressi per vedere i grafici
             </p>
@@ -362,7 +487,9 @@ export default function Progress() {
 
       {/* Distribuzione Gruppi Muscolari */}
       <div className="bg-white dark:bg-gray-800 rounded-lg shadow-lg p-6">
-        <h3 className="text-lg font-semibold mb-4 text-gray-900 dark:text-white">Distribuzione Allenamento</h3>
+        <h3 className="text-lg font-semibold mb-4 text-gray-900 dark:text-white">
+          Distribuzione Allenamento
+        </h3>
         {hasMuscleGroupData ? (
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
             <div>
@@ -377,38 +504,48 @@ export default function Progress() {
                     fill="#8884d8"
                     dataKey="value"
                     nameKey="name"
-                    label={({ name, percent }) => `${name}: ${(percent * 100).toFixed(0)}%`}
+                    label={({ name, percent }) =>
+                      `${name}: ${(percent * 100).toFixed(0)}%`
+                    }
                   >
                     {progressData.muscleGroups.map((entry, index) => (
-                      <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
+                      <Cell
+                        key={`cell-${index}`}
+                        fill={COLORS[index % COLORS.length]}
+                      />
                     ))}
                   </Pie>
                   <Tooltip
                     formatter={(value, name, props) => [
                       `${value} esercizi`,
-                      props.payload.name
+                      props.payload.name,
                     ]}
                   />
                 </PieChart>
               </ResponsiveContainer>
             </div>
             <div className="flex flex-col justify-center">
-              <h4 className="text-md font-medium mb-4 text-gray-700 dark:text-gray-300">Gruppi Muscolari Allenati</h4>
+              <h4 className="text-md font-medium mb-4 text-gray-700 dark:text-gray-300">
+                Gruppi Muscolari Allenati
+              </h4>
               <div className="space-y-3">
                 {progressData.muscleGroups.map((group, index) => (
                   <div key={index} className="flex items-center">
-                    <div 
-                      className="w-4 h-4 rounded-full mr-3" 
+                    <div
+                      className="w-4 h-4 rounded-full mr-3"
                       style={{ backgroundColor: COLORS[index % COLORS.length] }}
                     ></div>
                     <div className="flex-1">
                       <div className="flex justify-between">
                         <span className="font-medium">{group.name}</span>
-                        <span className="text-gray-600 dark:text-gray-400">{group.value} esercizi</span>
+                        <span className="text-gray-600 dark:text-gray-400">
+                          {group.value} esercizi
+                        </span>
                       </div>
                       <div className="text-xs text-gray-500 dark:text-gray-400 mt-1">
-                        {group.exercises.slice(0, 3).join(', ')}
-                        {group.exercises.length > 3 && ` +${group.exercises.length - 3} altri`}
+                        {group.exercises.slice(0, 3).join(", ")}
+                        {group.exercises.length > 3 &&
+                          ` +${group.exercises.length - 3} altri`}
                       </div>
                     </div>
                   </div>
@@ -418,7 +555,9 @@ export default function Progress() {
           </div>
         ) : (
           <div className="text-center py-12">
-            <p className="text-gray-500 dark:text-gray-400">Nessun dato di allenamento disponibile</p>
+            <p className="text-gray-500 dark:text-gray-400">
+              Nessun dato di allenamento disponibile
+            </p>
             <p className="text-sm text-gray-400 dark:text-gray-500 mt-2">
               Completa i tuoi allenamenti per vedere la distribuzione
             </p>
@@ -428,20 +567,31 @@ export default function Progress() {
 
       {/* Frequenza Allenamenti */}
       <div className="bg-white dark:bg-gray-800 rounded-lg shadow-lg p-6">
-        <h3 className="text-lg font-semibold mb-4 text-gray-900 dark:text-white">Frequenza Allenamenti</h3>
+        <h3 className="text-lg font-semibold mb-4 text-gray-900 dark:text-white">
+          Frequenza Allenamenti
+        </h3>
         {hasWorkoutFrequency ? (
           <ResponsiveContainer width="100%" height={300}>
             <BarChart data={progressData.workoutFrequency}>
               <CartesianGrid strokeDasharray="3 3" className="opacity-30" />
               <XAxis dataKey="day" />
               <YAxis allowDecimals={false} />
-              <Tooltip formatter={(value) => [`${value} allenamenti`, 'Frequenza']} />
-              <Bar dataKey="count" name="Allenamenti" fill="#3B82F6" radius={[4, 4, 0, 0]} />
+              <Tooltip
+                formatter={(value) => [`${value} allenamenti`, "Frequenza"]}
+              />
+              <Bar
+                dataKey="count"
+                name="Allenamenti"
+                fill="#3B82F6"
+                radius={[4, 4, 0, 0]}
+              />
             </BarChart>
           </ResponsiveContainer>
         ) : (
           <div className="text-center py-12">
-            <p className="text-gray-500 dark:text-gray-400">Nessun dato di frequenza disponibile</p>
+            <p className="text-gray-500 dark:text-gray-400">
+              Nessun dato di frequenza disponibile
+            </p>
             <p className="text-sm text-gray-400 dark:text-gray-500 mt-2">
               Completa i tuoi allenamenti per vedere la frequenza settimanale
             </p>
@@ -451,7 +601,9 @@ export default function Progress() {
 
       {/* Progressione Esercizi */}
       <div className="bg-white dark:bg-gray-800 rounded-lg shadow-lg p-6">
-        <h3 className="text-lg font-semibold mb-4 text-gray-900 dark:text-white">Progressione Esercizi</h3>
+        <h3 className="text-lg font-semibold mb-4 text-gray-900 dark:text-white">
+          Progressione Esercizi
+        </h3>
         {hasExerciseProgress ? (
           <div className="space-y-6">
             <div className="flex flex-wrap gap-2">
@@ -459,9 +611,10 @@ export default function Progress() {
                 <button
                   key={index}
                   onClick={() => setSelectedExercise(ex.exercise)}
-                  className={`px-3 py-1.5 text-sm rounded-full transition-colors ${selectedExercise === ex.exercise
-                    ? 'bg-blue-500 text-white'
-                    : 'bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600'
+                  className={`px-3 py-1.5 text-sm rounded-full transition-colors ${
+                    selectedExercise === ex.exercise
+                      ? "bg-blue-500 text-white"
+                      : "bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600"
                   }`}
                 >
                   {ex.exercise}
@@ -482,40 +635,47 @@ export default function Progress() {
 
                 <ResponsiveContainer width="100%" height={300}>
                   <LineChart data={exerciseChartData}>
-                    <CartesianGrid strokeDasharray="3 3" className="opacity-30" />
-                    <XAxis 
-                      dataKey="date" 
+                    <CartesianGrid
+                      strokeDasharray="3 3"
+                      className="opacity-30"
+                    />
+                    <XAxis
+                      dataKey="date"
                       tickFormatter={(value) => {
                         const date = new Date(value);
                         return `${date.getDate()}/${date.getMonth() + 1}`;
                       }}
                     />
                     <YAxis yAxisId="left" orientation="left" stroke="#3B82F6" />
-                    <YAxis yAxisId="right" orientation="right" stroke="#10B981" />
+                    <YAxis
+                      yAxisId="right"
+                      orientation="right"
+                      stroke="#10B981"
+                    />
                     <Tooltip
                       labelFormatter={(value) => {
                         const date = new Date(value);
-                        return date.toLocaleDateString('it-IT');
+                        return date.toLocaleDateString("it-IT");
                       }}
                     />
                     <Legend />
-                    <Line 
-                      yAxisId="left" 
-                      type="monotone" 
-                      dataKey="weight" 
-                      stroke="#3B82F6" 
-                      name="Peso (kg)" 
+                    <Line
+                      yAxisId="left"
+                      type="monotone"
+                      dataKey="weight"
+                      stroke="#3B82F6"
+                      name="Peso (kg)"
                       strokeWidth={2}
-                      dot={{ fill: '#3B82F6', strokeWidth: 2, r: 4 }}
+                      dot={{ fill: "#3B82F6", strokeWidth: 2, r: 4 }}
                     />
-                    <Line 
-                      yAxisId="right" 
-                      type="monotone" 
-                      dataKey="reps" 
-                      stroke="#10B981" 
-                      name="Ripetizioni" 
+                    <Line
+                      yAxisId="right"
+                      type="monotone"
+                      dataKey="reps"
+                      stroke="#10B981"
+                      name="Ripetizioni"
                       strokeWidth={2}
-                      dot={{ fill: '#10B981', strokeWidth: 2, r: 4 }}
+                      dot={{ fill: "#10B981", strokeWidth: 2, r: 4 }}
                     />
                   </LineChart>
                 </ResponsiveContainer>
@@ -524,9 +684,12 @@ export default function Progress() {
           </div>
         ) : (
           <div className="text-center py-12">
-            <p className="text-gray-500 dark:text-gray-400">Nessun dato di progressione disponibile</p>
+            <p className="text-gray-500 dark:text-gray-400">
+              Nessun dato di progressione disponibile
+            </p>
             <p className="text-sm text-gray-400 dark:text-gray-500 mt-2">
-              Completa i tuoi allenamenti per vedere la progressione degli esercizi
+              Completa i tuoi allenamenti per vedere la progressione degli
+              esercizi
             </p>
           </div>
         )}
@@ -534,7 +697,9 @@ export default function Progress() {
 
       {/* Record Personali */}
       <div className="bg-white dark:bg-gray-800 rounded-lg shadow-lg p-6">
-        <h3 className="text-lg font-semibold mb-4 text-gray-900 dark:text-white">Record Personali</h3>
+        <h3 className="text-lg font-semibold mb-4 text-gray-900 dark:text-white">
+          Record Personali
+        </h3>
         {hasPersonalBests ? (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
             {progressData.personalBests.map((pb, index) => (
@@ -556,7 +721,7 @@ export default function Progress() {
                   )}
                 </div>
                 <p className="text-xs text-gray-500 dark:text-gray-400 mt-2">
-                  {new Date(pb.achievedAt).toLocaleDateString('it-IT')}
+                  {new Date(pb.achievedAt).toLocaleDateString("it-IT")}
                 </p>
                 {pb.muscleGroup && (
                   <p className="text-xs bg-blue-200 dark:bg-blue-800 text-blue-800 dark:text-blue-200 px-2 py-0.5 rounded-full inline-block mt-2">
@@ -571,7 +736,9 @@ export default function Progress() {
           </div>
         ) : (
           <div className="text-center py-12">
-            <p className="text-gray-500 dark:text-gray-400">Nessun record personale disponibile</p>
+            <p className="text-gray-500 dark:text-gray-400">
+              Nessun record personale disponibile
+            </p>
             <p className="text-sm text-gray-400 dark:text-gray-500 mt-2">
               Completa i tuoi allenamenti per stabilire nuovi record
             </p>
@@ -582,15 +749,30 @@ export default function Progress() {
       {/* Radar Chart delle Capacità */}
       {hasMuscleGroupData && (
         <div className="bg-white dark:bg-gray-800 rounded-lg shadow-lg p-6">
-          <h3 className="text-lg font-semibold mb-4 text-gray-900 dark:text-white">Analisi Capacità</h3>
+          <h3 className="text-lg font-semibold mb-4 text-gray-900 dark:text-white">
+            Analisi Capacità
+          </h3>
           <div className="flex justify-center">
             <ResponsiveContainer width="100%" height={400}>
-              <RadarChart cx="50%" cy="50%" outerRadius="80%" data={progressData.muscleGroups}>
+              <RadarChart
+                cx="50%"
+                cy="50%"
+                outerRadius="80%"
+                data={progressData.muscleGroups}
+              >
                 <PolarGrid />
                 <PolarAngleAxis dataKey="name" />
                 <PolarRadiusAxis />
-                <Radar name="Livello di Sviluppo" dataKey="value" stroke="#3B82F6" fill="#3B82F6" fillOpacity={0.6} />
-                <Tooltip formatter={(value) => [`Livello ${value}`, 'Sviluppo']} />
+                <Radar
+                  name="Livello di Sviluppo"
+                  dataKey="value"
+                  stroke="#3B82F6"
+                  fill="#3B82F6"
+                  fillOpacity={0.6}
+                />
+                <Tooltip
+                  formatter={(value) => [`Livello ${value}`, "Sviluppo"]}
+                />
               </RadarChart>
             </ResponsiveContainer>
           </div>
@@ -598,3 +780,4 @@ export default function Progress() {
       )}
     </div>
   );
+}
