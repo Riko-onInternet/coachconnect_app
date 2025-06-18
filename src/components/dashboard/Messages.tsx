@@ -9,6 +9,7 @@ import {
   Check,
   CheckCheck,
 } from "lucide-react";
+import { getValidToken } from "@/utils/auth";
 
 interface Chat {
   id: string;
@@ -62,7 +63,14 @@ export default function Messages() {
   useEffect(() => {
     const fetchChats = async () => {
       try {
-        const token = localStorage.getItem("token");
+        const token = getValidToken();
+        if (!token) {
+          console.log("🔍 Token non disponibile per caricamento chat");
+          setChats([]);
+          setLoading(false);
+          return;
+        }
+
         const response = await fetch(`${API_BASE_URL}/api/messages/chats`, {
           headers: {
             Authorization: `Bearer ${token}`,

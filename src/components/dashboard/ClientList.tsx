@@ -38,10 +38,23 @@ export default function ClientList() {
           Authorization: `Bearer ${token}`,
         },
       });
+      
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+      
       const data = await response.json();
-      setClients(data);
+      
+      // Verifica che data sia un array
+      if (Array.isArray(data)) {
+        setClients(data);
+      } else {
+        console.error("I dati ricevuti non sono un array:", data);
+        setClients([]); // Imposta un array vuoto come fallback
+      }
     } catch (error) {
       console.error("Errore nel caricamento dei clienti:", error);
+      setClients([]); // Imposta un array vuoto in caso di errore
     } finally {
       setLoading(false);
     }

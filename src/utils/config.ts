@@ -1,7 +1,7 @@
 function getApiBaseUrl(): string {
   // Decommentare per test locali
   // const serverIp = "localhost";
-  // const serverPort = "3000";
+  // const serverPort = "3001";
   // return `http://${serverIp}:${serverPort}`;
   return `https://coachconnect-server.onrender.com`;
 }

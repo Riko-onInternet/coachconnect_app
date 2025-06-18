@@ -1,19 +1,29 @@
-import React, { useState, useRef, useEffect } from 'react';
-import { Bell, Menu, X, LogOut, Home as HomeIcon, Dumbbell, TrendingUp, MessageCircle } from 'lucide-react';
-import Home from './Home';
-import MyWorkouts from './MyWorkouts';
-import Progress from './Progress';
-import Messages from './Messages';
-import Notifications from './Notifications';
-import SelectTrainerModal from './SelectTrainerModal';
-import { API_BASE_URL, SOCKET_URL } from '@/utils/config';
+import React, { useState, useRef, useEffect } from "react";
+import {
+  Bell,
+  Menu,
+  X,
+  LogOut,
+  Home as HomeIcon,
+  Dumbbell,
+  TrendingUp,
+  MessageCircle,
+} from "lucide-react";
+import Home from "./Home";
+import MyWorkouts from "./MyWorkouts";
+import Progress from "./Progress";
+import Messages from "./Messages";
+import Notifications from "./Notifications";
+import SelectTrainerModal from "./SelectTrainerModal";
+import { API_BASE_URL, SOCKET_URL } from "@/utils/config";
 import { io } from "socket.io-client";
 import { getUserId } from "@/utils/auth";
+import { getValidToken } from "@/utils/auth";
 
-type ActiveTab = 'home' | 'workouts' | 'progress' | 'messages';
+type ActiveTab = "home" | "workouts" | "progress" | "messages";
 
 export default function ClientDashboard() {
-  const [activeTab, setActiveTab] = useState<ActiveTab>('home');
+  const [activeTab, setActiveTab] = useState<ActiveTab>("home");
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [showNotifications, setShowNotifications] = useState(false);
   const [hasTrainer, setHasTrainer] = useState<boolean | null>(null);
@@ -25,28 +35,32 @@ export default function ClientDashboard() {
   useEffect(() => {
     const checkTrainerStatus = async () => {
       try {
-        const token = localStorage.getItem('token');
+        const token = getValidToken();
         if (!token) {
-          window.location.href = '/login';
+          console.log("🔍 Token non disponibile, reindirizzamento al login");
+          window.location.href = "/login";
           return;
         }
 
-        const response = await fetch(`${API_BASE_URL}/api/client/trainer-status`, {
-          headers: {
-            'Authorization': `Bearer ${token}`,
-            'Content-Type': 'application/json'
+        const response = await fetch(
+          `${API_BASE_URL}/api/client/trainer-status`,
+          {
+            headers: {
+              Authorization: `Bearer ${token}`,
+              "Content-Type": "application/json",
+            },
           }
-        });
+        );
 
         if (response.ok) {
           const data = await response.json();
           setHasTrainer(data.hasTrainer || false);
         } else {
-          console.error('Errore nel recupero dello stato del trainer');
+          console.error("Errore nel recupero dello stato del trainer");
           setHasTrainer(false);
         }
       } catch (error) {
-        console.error('Errore nella richiesta:', error);
+        console.error("Errore nella richiesta:", error);
         setHasTrainer(false);
       } finally {
         setLoading(false);
@@ -60,7 +74,12 @@ export default function ClientDashboard() {
   useEffect(() => {
     const checkInitialUnreadMessages = async () => {
       try {
-        const token = localStorage.getItem("token");
+        const token = getValidToken();
+        if (!token) {
+          console.log("🔍 Token non disponibile per messaggi non letti");
+          return;
+        }
+
         const response = await fetch(
           `${API_BASE_URL}/api/messages/unread-count`,
           {
@@ -132,17 +151,20 @@ export default function ClientDashboard() {
   // Aggiungi questo useEffect per gestire il click esterno delle notifiche
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
-      if (notificationRef.current && !notificationRef.current.contains(event.target as Node)) {
+      if (
+        notificationRef.current &&
+        !notificationRef.current.contains(event.target as Node)
+      ) {
         setShowNotifications(false);
       }
     };
 
     if (showNotifications) {
-      document.addEventListener('mousedown', handleClickOutside);
+      document.addEventListener("mousedown", handleClickOutside);
     }
 
     return () => {
-      document.removeEventListener('mousedown', handleClickOutside);
+      document.removeEventListener("mousedown", handleClickOutside);
     };
   }, [showNotifications]);
 
@@ -154,7 +176,12 @@ export default function ClientDashboard() {
   // Gestione click su tab messaggi
   const handleMessageTabClick = async () => {
     try {
-      const token = localStorage.getItem("token");
+      const token = getValidToken();
+      if (!token) {
+        console.log("🔍 Token non disponibile per reset messaggi");
+        return;
+      }
+
       await fetch(`${API_BASE_URL}/api/messages/mark-all-read`, {
         method: "POST",
         headers: {
@@ -172,13 +199,13 @@ export default function ClientDashboard() {
 
   const renderContent = () => {
     switch (activeTab) {
-      case 'home':
+      case "home":
         return <Home />;
-      case 'workouts':
+      case "workouts":
         return <MyWorkouts />;
-      case 'progress':
+      case "progress":
         return <Progress />;
-      case 'messages':
+      case "messages":
         return <Messages />;
       default:
         return <Home />;
@@ -186,10 +213,19 @@ export default function ClientDashboard() {
   };
 
   const menuItems = [
-    { id: 'home' as ActiveTab, label: 'Home', icon: HomeIcon },
-    { id: 'workouts' as ActiveTab, label: 'I miei allenamenti', icon: Dumbbell },
-    { id: 'progress' as ActiveTab, label: 'Progressi', icon: TrendingUp },
-    { id: 'messages' as ActiveTab, label: 'Messaggi', icon: MessageCircle, badge: unreadMessages },
+    { id: "home" as ActiveTab, label: "Home", icon: HomeIcon },
+    {
+      id: "workouts" as ActiveTab,
+      label: "I miei allenamenti",
+      icon: Dumbbell,
+    },
+    { id: "progress" as ActiveTab, label: "Progressi", icon: TrendingUp },
+    {
+      id: "messages" as ActiveTab,
+      label: "Messaggi",
+      icon: MessageCircle,
+      badge: unreadMessages,
+    },
   ];
 
   if (loading) {
@@ -203,9 +239,11 @@ export default function ClientDashboard() {
   return (
     <div className="flex h-screen bg-gray-100 dark:bg-gray-900">
       {/* Sidebar */}
-      <div className={`fixed inset-y-0 left-0 z-50 w-64 bg-white dark:bg-gray-800 shadow-lg transform ${
-        sidebarOpen ? 'translate-x-0' : '-translate-x-full'
-      } transition-transform duration-300 ease-in-out lg:translate-x-0 lg:static lg:inset-0`}>
+      <div
+        className={`fixed inset-y-0 left-0 z-50 w-64 bg-white dark:bg-gray-800 shadow-lg transform ${
+          sidebarOpen ? "translate-x-0" : "-translate-x-full"
+        } transition-transform duration-300 ease-in-out lg:translate-x-0 lg:static lg:inset-0`}
+      >
         <div className="flex items-center justify-center h-16 bg-blue-600">
           <h1 className="text-xl font-bold text-white">CoachConnect</h1>
         </div>
@@ -216,7 +254,7 @@ export default function ClientDashboard() {
               <button
                 key={item.id}
                 onClick={() => {
-                  if (item.id === 'messages') {
+                  if (item.id === "messages") {
                     handleMessageTabClick();
                   } else {
                     setActiveTab(item.id);
@@ -225,8 +263,8 @@ export default function ClientDashboard() {
                 }}
                 className={`w-full flex items-center justify-between px-6 py-3 text-left hover:bg-gray-100 dark:hover:bg-gray-700 ${
                   activeTab === item.id
-                    ? 'bg-blue-50 dark:bg-blue-900 text-blue-600 dark:text-blue-400 border-r-4 border-blue-600'
-                    : 'text-gray-700 dark:text-gray-300'
+                    ? "bg-blue-50 dark:bg-blue-900 text-blue-600 dark:text-blue-400 border-r-4 border-blue-600"
+                    : "text-gray-700 dark:text-gray-300"
                 }`}
               >
                 <div className="flex items-center">
@@ -262,9 +300,13 @@ export default function ClientDashboard() {
               onClick={() => setSidebarOpen(!sidebarOpen)}
               className="lg:hidden p-2 rounded-md text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700"
             >
-              {sidebarOpen ? <X className="h-6 w-6" /> : <Menu className="h-6 w-6" />}
+              {sidebarOpen ? (
+                <X className="h-6 w-6" />
+              ) : (
+                <Menu className="h-6 w-6" />
+              )}
             </button>
-            
+
             <div className="flex items-center space-x-4">
               <div className="relative" ref={notificationRef}>
                 <button
@@ -284,9 +326,7 @@ export default function ClientDashboard() {
         </header>
 
         {/* Page content */}
-        <main className="flex-1 overflow-y-auto p-6">
-          {renderContent()}
-        </main>
+        <main className="flex-1 overflow-y-auto p-6">{renderContent()}</main>
       </div>
 
       {/* Overlay for mobile sidebar */}
@@ -302,7 +342,7 @@ export default function ClientDashboard() {
         <SelectTrainerModal
           onClose={() => {}}
           onSelect={(trainerId) => {
-            console.log('Trainer selezionato:', trainerId);
+            console.log("Trainer selezionato:", trainerId);
             setHasTrainer(true);
           }}
         />

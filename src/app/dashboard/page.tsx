@@ -19,7 +19,12 @@ export default function Dashboard() {
           router.push("/login");
           return;
         }
-
+        
+        // Debug del token
+        console.log("Token trovato:", token);
+        console.log("Lunghezza token:", token.length);
+        console.log("Parti del token:", token.split('.').length);
+        
         const response = await fetch(`${API_BASE_URL}/api/auth/me`, {
           headers: {
             Authorization: `Bearer ${token}`,
