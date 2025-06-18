@@ -1,5 +1,5 @@
 "use client";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { API_BASE_URL } from "@/utils/config";
@@ -12,6 +12,35 @@ export default function LoginPage() {
   });
   const [error, setError] = useState("");
   const [isLoading, setIsLoading] = useState(false);
+  const [rememberMe, setRememberMe] = useState(false);
+
+  // Verifica se l'utente è già loggato all'avvio del componente
+  useEffect(() => {
+    const token = localStorage.getItem("token");
+    const isRemembered = localStorage.getItem("rememberMe") === "true";
+    
+    if (token && isRemembered) {
+      // Verifica che il token sia valido prima di reindirizzare
+      fetch(`${API_BASE_URL}/api/auth/me`, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      })
+        .then((response) => {
+          if (response.ok) {
+            router.push("/dashboard");
+          } else {
+            // Se il token non è valido, lo rimuoviamo
+            localStorage.removeItem("token");
+            localStorage.removeItem("rememberMe");
+          }
+        })
+        .catch(() => {
+          // In caso di errore di rete, non facciamo nulla
+          // L'utente potrà comunque effettuare il login manualmente
+        });
+    }
+  }, [router]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -33,8 +62,16 @@ export default function LoginPage() {
         throw new Error(data.message || "Errore durante il login");
       }
 
-      // Salva il token in localStorage
-      localStorage.setItem("token", data.token);
+      // Salva il token in base alla selezione "ricordami"
+      if (rememberMe) {
+        // Se "ricordami" è selezionato, salva in localStorage (persistente)
+        localStorage.setItem("token", data.token);
+        localStorage.setItem("rememberMe", "true");
+      } else {
+        // Altrimenti, salva in sessionStorage (dura solo per la sessione del browser)
+        sessionStorage.setItem("token", data.token);
+        localStorage.removeItem("rememberMe");
+      }
 
       // Reindirizza alla dashboard
       router.push("/dashboard");
@@ -135,6 +172,8 @@ export default function LoginPage() {
                 name="remember-me"
                 type="checkbox"
                 className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
+                checked={rememberMe}
+                onChange={(e) => setRememberMe(e.target.checked)}
               />
               <label
                 htmlFor="remember-me"

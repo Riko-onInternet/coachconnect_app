@@ -29,8 +29,9 @@ export default function Dashboard() {
 
         if (response.ok) {
           console.log("Ruolo ricevuto:", data.role); // Per debug
-          if (data.role === "TRAINER" || data.role === "CLIENT") {
-            setUserRole(data.role);
+          if (typeof data.role === 'string' && 
+              (data.role.toUpperCase() === "TRAINER" || data.role.toUpperCase() === "CLIENT")) {
+            setUserRole(data.role.toUpperCase() as "TRAINER" | "CLIENT");
           } else {
             console.error("Ruolo non valido ricevuto:", data.role);
             throw new Error("Ruolo utente non valido");
