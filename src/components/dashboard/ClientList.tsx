@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { Search } from "lucide-react";
 import { API_BASE_URL } from "@/utils/config";
+import { getValidToken } from "@/utils/auth";
 import ClientCard from "./ClientCard";
 import ClientModal from "./ClientModal";
 import LoadingSpinner from "./LoadingSpinner";
@@ -32,7 +33,14 @@ export default function ClientList() {
 
   const fetchClients = async () => {
     try {
-      const token = localStorage.getItem("token");
+      const token = getValidToken();
+      if (!token) {
+        console.log("🔍 Token non disponibile per caricamento clienti");
+        setClients([]);
+        setLoading(false);
+        return;
+      }
+
       const response = await fetch(`${API_BASE_URL}/api/trainer/clients`, {
         headers: {
           Authorization: `Bearer ${token}`,
@@ -62,7 +70,12 @@ export default function ClientList() {
 
   const fetchClientDetails = async (clientId: string) => {
     try {
-      const token = localStorage.getItem("token");
+      const token = getValidToken();
+      if (!token) {
+        console.log("🔍 Token non disponibile per dettagli cliente");
+        return null;
+      }
+
       const response = await fetch(
         `${API_BASE_URL}/api/trainer/clients/${clientId}`,
         {
