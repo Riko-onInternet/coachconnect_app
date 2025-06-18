@@ -13,7 +13,8 @@ export default function Dashboard() {
   useEffect(() => {
     const fetchUserRole = async () => {
       try {
-        const token = localStorage.getItem("token");
+        // Cerca il token sia in localStorage che in sessionStorage
+        const token = localStorage.getItem("token") || sessionStorage.getItem("token");
         if (!token) {
           router.push("/login");
           return;
@@ -28,7 +29,10 @@ export default function Dashboard() {
         const data = await response.json();
 
         if (response.ok) {
-          console.log("Ruolo ricevuto:", data.role); // Per debug
+          console.log("Ruolo ricevuto (raw):", data.role);
+          console.log("Tipo del ruolo:", typeof data.role);
+          console.log("Valore JSON del ruolo:", JSON.stringify(data.role));
+          
           if (typeof data.role === 'string' && 
               (data.role.toUpperCase() === "TRAINER" || data.role.toUpperCase() === "CLIENT")) {
             setUserRole(data.role.toUpperCase() as "TRAINER" | "CLIENT");
