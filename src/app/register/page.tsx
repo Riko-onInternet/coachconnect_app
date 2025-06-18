@@ -48,10 +48,10 @@ export default function RegisterPage() {
 
       const data = await response.json();
       
-      if (response.ok) {
+      if (!response.ok) {
         throw new Error(data.message || data.error || "Errore durante la registrazione");
       }
-
+      
       // Reindirizza alla pagina di login dopo la registrazione
       router.push("/login");
     } catch (err: Error | unknown) {

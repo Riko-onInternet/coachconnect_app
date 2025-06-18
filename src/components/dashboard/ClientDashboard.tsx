@@ -114,16 +114,24 @@ export default function ClientDashboard() {
   useEffect(() => {
     const socket = io(SOCKET_URL, {
       auth: { token: localStorage.getItem("token") },
+      reconnectionAttempts: 5,
+      reconnectionDelay: 1000,
     });
 
     socket.on("connect", () => {
+      console.log("Socket connesso");
       const userId = getUserId();
       if (userId) {
         socket.emit("join", userId);
       }
     });
 
-    socket.on("newMessage", (message) => {
+    socket.on("connect_error", (error: Error) => {
+      console.error("Errore di connessione Socket.IO:", error);
+      // Continua senza Socket.IO in caso di errore
+    });
+
+    socket.on("newMessage", (message: { receiverId: string }) => {
       const currentUserId = getUserId();
       if (message.receiverId === currentUserId && activeTab !== "messages") {
         const newCount = unreadMessages + 1;
@@ -132,7 +140,7 @@ export default function ClientDashboard() {
       }
     });
 
-    socket.on("unreadCount", ({ count }) => {
+    socket.on("unreadCount", ({ count }: { count: number }) => {
       if (activeTab !== "messages" && count > 0) {
         setUnreadMessages(count);
         localStorage.setItem("unreadMessagesCount", count.toString());
@@ -304,7 +312,7 @@ export default function ClientDashboard() {
               )}
             </button>
 
-            <div className="flex items-center space-x-4">
+            <div className="flex items-center space-x-4 lg:justify-end w-full">
               <div className="relative" ref={notificationRef}>
                 <button
                   onClick={() => setShowNotifications(!showNotifications)}
@@ -338,8 +346,37 @@ export default function ClientDashboard() {
       {hasTrainer === false && (
         <SelectTrainerModal
           onClose={() => {}}
-          onSelect={() => {
-            setHasTrainer(true);
+          onSelect={(trainerId) => {
+            // Invia richiesta al server per associare il client al trainer
+            const requestTrainer = async () => {
+              try {
+                const token = getValidToken();
+                if (!token) return;
+                
+                const response = await fetch(`${API_BASE_URL}/api/client/request-trainer`, {
+                  method: 'POST',
+                  headers: {
+                    'Authorization': `Bearer ${token}`,
+                    'Content-Type': 'application/json'
+                  },
+                  body: JSON.stringify({ trainerId })
+                });
+                
+                if (response.ok) {
+                  // Aggiorna lo stato solo se la richiesta ha avuto successo
+                  setHasTrainer(true);
+                } else {
+                  const errorData = await response.json();
+                  console.error('Errore nella richiesta del trainer:', errorData);
+                  alert('Errore nell\'invio della richiesta al trainer. Riprova più tardi.');
+                }
+              } catch (error) {
+                console.error('Errore nella richiesta:', error);
+                alert('Errore di connessione. Verifica la tua connessione internet e riprova.');
+              }
+            };
+            
+            requestTrainer();
           }}
         />
       )}

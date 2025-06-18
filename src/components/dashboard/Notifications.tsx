@@ -73,7 +73,12 @@ export default function Notifications() {
     clientId: string
   ) => {
     try {
-      const token = localStorage.getItem("token");
+      // Utilizza getValidToken() invece di localStorage.getItem('token')
+      const token = getValidToken();
+      if (!token) {
+        throw new Error("Token di autenticazione mancante o non valido");
+      }
+      
       const response = await fetch(
         `${API_BASE_URL}/api/trainer/handle-request`,
         {

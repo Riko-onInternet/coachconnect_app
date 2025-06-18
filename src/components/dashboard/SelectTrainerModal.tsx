@@ -2,6 +2,7 @@
 import { useState, useEffect } from 'react';
 import { Trainer } from '@/types/types';
 import { API_BASE_URL } from "@/utils/config";
+import { getValidToken } from "@/utils/auth";
 
 interface SelectTrainerModalProps {
   onClose: () => void;
@@ -15,7 +16,12 @@ export default function SelectTrainerModal({ onClose, onSelect }: SelectTrainerM
   useEffect(() => {
     const fetchTrainers = async () => {
       try {
-        const token = localStorage.getItem('token');
+        // Utilizza getValidToken() invece di localStorage.getItem('token')
+        const token = getValidToken();
+        if (!token) {
+          throw new Error('Token di autenticazione mancante o non valido');
+        }
+        
         // Modifica l'URL per utilizzare la nuova route
         const response = await fetch(`${API_BASE_URL}/api/trainer/all`, {
           headers: {

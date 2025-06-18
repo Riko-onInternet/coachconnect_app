@@ -82,7 +82,7 @@ export default function TrainerDashboard() {
       }
     });
 
-    socket.on("newMessage", (message) => {
+    socket.on("newMessage", (message: { receiverId: string }) => {
       const currentUserId = getUserId();
       if (message.receiverId === currentUserId && activeTab !== "messages") {
         const newCount = unreadMessages + 1;
@@ -92,7 +92,7 @@ export default function TrainerDashboard() {
       }
     });
 
-    socket.on("unreadCount", ({ count }) => {
+    socket.on("unreadCount", ({ count }: { count: number }) => {
       if (activeTab !== "messages" && count > 0) {
         setUnreadMessages(count);
         // Aggiorna il conteggio in localStorage

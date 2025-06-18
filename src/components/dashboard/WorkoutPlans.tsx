@@ -36,6 +36,41 @@ export default function WorkoutPlans() {
     name: "",
   });
 
+  // Aggiungi questa funzione insieme alle altre funzioni del componente
+  const deleteExerciseList = async (listId: string) => {
+    if (!confirm("Sei sicuro di voler eliminare questa lista di esercizi?")) {
+      return;
+    }
+
+    try {
+      const token = getValidToken();
+      if (!token) {
+        alert("Token non valido. Effettua nuovamente il login.");
+        return;
+      }
+
+      const response = await fetch(
+        `${API_BASE_URL}/api/trainer/exercise-lists/${listId}`,
+        {
+          method: "DELETE",
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
+
+      if (response.ok) {
+        alert("Lista di esercizi eliminata con successo!");
+        setExerciseLists(exerciseLists.filter((list) => list.id !== listId));
+      } else {
+        alert("Errore nell'eliminazione della lista di esercizi.");
+      }
+    } catch (error) {
+      console.error("Errore nell'eliminazione della lista di esercizi:", error);
+      alert("Si è verificato un errore. Riprova più tardi.");
+    }
+  };
+
   // Form data per nuovo esercizio
   const [exerciseFormData, setExerciseFormData] = useState({
     exerciseId: "",
@@ -60,7 +95,7 @@ export default function WorkoutPlans() {
         console.error("Token non valido");
         return;
       }
-      
+
       const response = await fetch(
         `${API_BASE_URL}/api/trainer/workout-plans`,
         {
@@ -69,11 +104,11 @@ export default function WorkoutPlans() {
           },
         }
       );
-      
+
       if (!response.ok) {
         throw new Error(`HTTP error! status: ${response.status}`);
       }
-      
+
       const data = await response.json();
       setWorkoutPlans(data);
     } catch (error) {
@@ -87,14 +122,14 @@ export default function WorkoutPlans() {
     if (!confirm("Sei sicuro di voler ritirare questo piano di allenamento?")) {
       return;
     }
-  
+
     try {
       const token = getValidToken();
       if (!token) {
         alert("Token non valido. Effettua nuovamente il login.");
         return;
       }
-      
+
       const response = await fetch(
         `${API_BASE_URL}/api/trainer/workout-plans/${planId}`,
         {
@@ -104,7 +139,7 @@ export default function WorkoutPlans() {
           },
         }
       );
-  
+
       if (response.ok) {
         alert("Piano di allenamento ritirato con successo!");
         setWorkoutPlans(workoutPlans.filter((plan) => plan.id !== planId));
@@ -126,17 +161,17 @@ export default function WorkoutPlans() {
         setLoading(false);
         return;
       }
-      
+
       const response = await fetch(`${API_BASE_URL}/api/trainer/clients`, {
         headers: {
           Authorization: `Bearer ${token}`,
         },
       });
-      
+
       if (!response.ok) {
         throw new Error(`HTTP error! status: ${response.status}`);
       }
-      
+
       const data = await response.json();
       setClients(Array.isArray(data) ? data : []);
     } catch (error) {
@@ -146,7 +181,6 @@ export default function WorkoutPlans() {
       setLoading(false);
     }
   };
-  
 
   const fetchExercises = async () => {
     try {
@@ -155,17 +189,17 @@ export default function WorkoutPlans() {
         console.error("Token non valido");
         return;
       }
-      
+
       const response = await fetch(`${API_BASE_URL}/api/exercises`, {
         headers: {
           Authorization: `Bearer ${token}`,
         },
       });
-      
+
       if (!response.ok) {
         throw new Error(`HTTP error! status: ${response.status}`);
       }
-      
+
       const data = await response.json();
       setExercises(Array.isArray(data) ? data : []);
     } catch (error) {
@@ -181,7 +215,7 @@ export default function WorkoutPlans() {
         console.error("Token non valido");
         return;
       }
-      
+
       const response = await fetch(
         `${API_BASE_URL}/api/trainer/exercise-lists`,
         {
@@ -190,11 +224,11 @@ export default function WorkoutPlans() {
           },
         }
       );
-      
+
       if (!response.ok) {
         throw new Error(`HTTP error! status: ${response.status}`);
       }
-      
+
       const data = await response.json();
       setExerciseLists(Array.isArray(data) ? data : []);
     } catch (error) {
@@ -213,7 +247,7 @@ export default function WorkoutPlans() {
         alert("Token non valido. Effettua nuovamente il login.");
         return;
       }
-      
+
       const response = await fetch(
         `${API_BASE_URL}/api/trainer/exercise-lists`,
         {
@@ -273,7 +307,7 @@ export default function WorkoutPlans() {
         alert("Token non valido. Effettua nuovamente il login.");
         return;
       }
-      
+
       const response = await fetch(
         `${API_BASE_URL}/api/trainer/exercise-lists/${selectedList.id}/exercises`,
         {
@@ -349,14 +383,14 @@ export default function WorkoutPlans() {
   // Funzione per assegnare un piano di allenamento
   const assignWorkoutPlan = async (list: ExerciseList, clientId: string) => {
     if (!selectedClient) return;
-  
+
     try {
       const token = getValidToken();
       if (!token) {
         console.error("Token non valido");
         return;
       }
-      
+
       const response = await fetch(
         `${API_BASE_URL}/api/trainer/workout-plans`,
         {
@@ -374,7 +408,7 @@ export default function WorkoutPlans() {
             clientId: clientId,
             exercises: list.exercises.map((exercise, index) => ({
               exerciseName: exercise.exerciseName, // Cambiato da exerciseId
-              muscleGroup: exercise.muscleGroup,   // Aggiunto campo mancante
+              muscleGroup: exercise.muscleGroup, // Aggiunto campo mancante
               sets: exercise.sets,
               reps: exercise.reps,
               weight: exercise.weight,
@@ -537,15 +571,27 @@ export default function WorkoutPlans() {
                     </p>
                   </div>
                 </div>
-                <button
-                  onClick={() => {
-                    setSelectedList(list);
-                    setShowAddExerciseModal(true);
-                  }}
-                  className="p-2 text-blue-500 hover:text-blue-700 hover:bg-blue-50 dark:hover:bg-blue-900/20 rounded-lg transition-colors"
-                >
-                  <Plus className="w-4 h-4" />
-                </button>
+                <div className="flex items-center">
+                  <button
+                    onClick={() => {
+                      setSelectedList(list);
+                      setShowAddExerciseModal(true);
+                    }}
+                    className="p-2 text-blue-500 hover:text-blue-700 hover:bg-blue-50 dark:hover:bg-blue-900/20 rounded-lg transition-colors mr-1 flex items-center gap-2"
+                    title="Aggiungi esercizio"
+                  >
+                    <Plus className="w-4 h-4" />
+                    <p>Aggiungi</p>
+                  </button>
+                  <button
+                    onClick={() => deleteExerciseList(list.id)}
+                    className="p-2 text-red-500 hover:text-red-700 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg transition-colors flex items-center gap-2"
+                    title="Elimina lista"
+                  >
+                    <Trash2 className="w-4 h-4" />
+                    <p>Elimina</p>
+                  </button>
+                </div>
               </div>
 
               <div className="space-y-3 max-h-64 overflow-y-auto">
@@ -603,9 +649,10 @@ export default function WorkoutPlans() {
       {selectedClient && (
         <div className="mt-8">
           <h3 className="text-lg font-semibold mb-4 text-gray-800 dark:text-white">
-            Piani di Allenamento Assegnati a {selectedClient.firstName} {selectedClient.lastName}
+            Piani di Allenamento Assegnati a {selectedClient.firstName}{" "}
+            {selectedClient.lastName}
           </h3>
-          
+
           {getClientWorkoutPlans(selectedClient.id).length === 0 ? (
             <div className="bg-white dark:bg-gray-800 rounded-lg shadow-md p-6 text-center">
               <p className="text-gray-600 dark:text-gray-300">
@@ -647,14 +694,16 @@ export default function WorkoutPlans() {
                       </button>
                     </div>
                   </div>
-                  
+
                   <div className="space-y-2">
                     <p className="text-sm text-gray-600 dark:text-gray-400">
-                      <strong>Data inizio:</strong> {new Date(plan.startDate).toLocaleDateString()}
+                      <strong>Data inizio:</strong>{" "}
+                      {new Date(plan.startDate).toLocaleDateString()}
                     </p>
                     {plan.endDate && (
                       <p className="text-sm text-gray-600 dark:text-gray-400">
-                        <strong>Data fine:</strong> {new Date(plan.endDate).toLocaleDateString()}
+                        <strong>Data fine:</strong>{" "}
+                        {new Date(plan.endDate).toLocaleDateString()}
                       </p>
                     )}
                     <p className="text-sm text-gray-600 dark:text-gray-400">
