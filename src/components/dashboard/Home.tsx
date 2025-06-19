@@ -65,6 +65,14 @@ export default function Home() {
           return;
         }
 
+        // Chiama l'endpoint di reset prima di caricare i dati della home
+        await fetch(`${API_BASE_URL}/api/workouts/reset-status`, {
+          method: "POST",
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        });
+
         // Fetch workouts
         const workoutsResponse = await fetch(`${API_BASE_URL}/api/workouts`, {
           headers: { Authorization: `Bearer ${token}` },

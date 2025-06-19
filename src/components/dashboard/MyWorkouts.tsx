@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-unused-vars */
 import React, { useState, useEffect } from "react";
 import { API_BASE_URL } from "@/utils/config";
 import { getValidToken } from "@/utils/auth";
@@ -25,58 +26,82 @@ export default function MyWorkouts() {
     null
   ); // Cambiato da number a string
 
-  useEffect(() => {
-    const fetchWorkouts = async () => {
-      try {
-        const token = getValidToken();
-        if (!token) {
-          console.error("Token non valido");
-          setLoading(false);
-          return;
-        }
-
-        const response = await fetch(`${API_BASE_URL}/api/workouts`, {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        });
-
-        if (!response.ok) {
-          throw new Error(`Errore API: ${response.status}`);
-        }
-
-        const data = await response.json();
-
-        // Verifica che data sia un array prima di usarlo
-        const workoutsArray = Array.isArray(data) ? data : [];
-
-        setWorkouts(workoutsArray);
-      } catch (error) {
-        console.error("Errore nel caricamento degli allenamenti:", error);
-        // Imposta un array vuoto in caso di errore
-        setWorkouts([]);
-      } finally {
+  const fetchWorkouts = async () => {
+    try {
+      setLoading(true);
+      const token = getValidToken();
+      if (!token) {
+        console.error("Token non valido");
         setLoading(false);
+        return;
       }
-    };
 
+      const response = await fetch(`${API_BASE_URL}/api/workouts`, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+
+      if (!response.ok) {
+        throw new Error(`Errore API: ${response.status}`);
+      }
+
+      const data = await response.json();
+      console.log("Dati ricevuti dall'API:", data); // Aggiungi questo log
+
+      // Verifica che data sia un array prima di usarlo
+      const workoutsArray = Array.isArray(data) ? data : [];
+
+      setWorkouts(workoutsArray);
+    } catch (error) {
+      console.error("Errore nel caricamento degli allenamenti:", error);
+      // Imposta un array vuoto in caso di errore
+      setWorkouts([]);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
     fetchWorkouts();
   }, []);
-
-  if (loading) {
-    return (
-      <div className="flex items-center justify-center h-64">
-        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-blue-500"></div>
-      </div>
-    );
-  }
 
   // Se è selezionato un workout, mostra la schermata dettagliata
   if (selectedWorkoutId) {
     return (
       <WorkoutDetail
         workoutId={selectedWorkoutId}
-        onBack={() => setSelectedWorkoutId(null)}
+        onBack={() => {
+          setSelectedWorkoutId(null);
+          setTimeout(() => {
+            fetchWorkouts();
+          }, 1000); // Aumenta a 1000ms
+        }}
+      />
+    );
+  }
+
+  // Aggiungi questa funzione
+  const updateWorkoutStatus = (workoutId: string, completed: boolean) => {
+    setWorkouts((prevWorkouts) =>
+      prevWorkouts.map((workout) =>
+        workout.id === workoutId ? { ...workout, completed } : workout
+      )
+    );
+  };
+
+  // Passa la funzione al componente WorkoutDetail
+  if (selectedWorkoutId) {
+    return (
+      <WorkoutDetail
+        workoutId={selectedWorkoutId}
+        onBack={() => {
+          setSelectedWorkoutId(null);
+          setTimeout(() => {
+            fetchWorkouts();
+          }, 300);
+        }}
+        onStatusUpdate={updateWorkoutStatus} // Aggiungi questa prop
       />
     );
   }
@@ -100,18 +125,8 @@ export default function MyWorkouts() {
               className="bg-white dark:bg-gray-800 rounded-lg shadow-lg p-6 cursor-pointer hover:shadow-xl transition-shadow"
               onClick={() => setSelectedWorkoutId(workout.id)}
             >
-              <div className="flex justify-between items-center mb-4">
-                <h3 className="text-lg font-semibold">{workout.title}</h3>
-                <span
-                  className={`px-3 py-1 rounded-full text-sm ${
-                    workout.completed
-                      ? "bg-green-100 text-green-800"
-                      : "bg-yellow-100 text-yellow-800"
-                  }`}
-                >
-                  {workout.completed ? "Completato" : "Da fare"}
-                </span>
-              </div>
+              <h3 className="text-lg font-semibold">{workout.title}</h3>
+
               <p className="text-gray-600 dark:text-gray-300 mb-4">
                 Data: {new Date(workout.date).toLocaleDateString()}
               </p>

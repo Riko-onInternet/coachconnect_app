@@ -25,8 +25,9 @@ interface Workout {
 }
 
 interface WorkoutDetailProps {
-  workoutId: string; // Cambiato da number a string
+  workoutId: string;
   onBack: () => void;
+  onStatusUpdate?: (workoutId: string, completed: boolean) => void;
 }
 
 export default function WorkoutDetail({
@@ -61,13 +62,18 @@ export default function WorkoutDetail({
       );
 
       if (!response.ok) {
-        const errorData = await response.json().catch(() => ({ 
-          message: 'Errore di comunicazione con il server durante il recupero dei dettagli del workout' 
+        const errorData = await response.json().catch(() => ({
+          message:
+            "Errore di comunicazione con il server durante il recupero dei dettagli del workout",
         })); // Messaggio più specifico
         // Rimosso console.error
-        throw new Error(`Errore ${response.status}: ${errorData.message || 'Errore del server nel recupero dei dettagli'}`);
+        throw new Error(
+          `Errore ${response.status}: ${
+            errorData.message || "Errore del server nel recupero dei dettagli"
+          }`
+        );
       }
-    
+
       const data = await response.json();
       setWorkout(data);
 
@@ -108,24 +114,36 @@ export default function WorkoutDetail({
         } else {
           // Se non ci sono progressi salvati o c'è un errore, inizializza normalmente
           // ma logga l'errore specifico del progresso per debug
-          const progressErrorData = await progressResponse.json().catch(() => ({ 
-            message: 'Errore di comunicazione con il server durante il recupero dei progressi.' 
+          const progressErrorData = await progressResponse.json().catch(() => ({
+            message:
+              "Errore di comunicazione con il server durante il recupero dei progressi.",
           }));
-          console.warn(`Attenzione: Non è stato possibile caricare i progressi salvati (Errore ${progressResponse.status}: ${progressErrorData.message}). Verranno inizializzati i progressi di base.`);
+          console.warn(
+            `Attenzione: Non è stato possibile caricare i progressi salvati (Errore ${progressResponse.status}: ${progressErrorData.message}). Verranno inizializzati i progressi di base.`
+          );
           initializeProgress(data); // Fallback: inizializza con i dati base del workout
         }
       } catch (error) {
         // Gestione migliorata degli errori per il recupero dei progressi
-        console.warn("Errore critico nel tentativo di recupero dei progressi:", error);
+        console.warn(
+          "Errore critico nel tentativo di recupero dei progressi:",
+          error
+        );
         // Rimosso console.log
         // Non mostrare alert per questo errore, è non critico se abbiamo un fallback
-        alert('Si è verificato un errore nel caricamento dei progressi. Verranno mostrati i dati di base dell-allenamento.');
+        alert(
+          "Si è verificato un errore nel caricamento dei progressi. Verranno mostrati i dati di base dell-allenamento."
+        );
         initializeProgress(data); // Fallback robusto
       }
     } catch (error) {
       // Rimosso console.error
       // Aggiungi un messaggio di errore più user-friendly
-      alert(`Errore nel caricamento dell'allenamento: ${error instanceof Error ? error.message : 'Errore sconosciuto'}`);
+      alert(
+        `Errore nel caricamento dell'allenamento: ${
+          error instanceof Error ? error.message : "Errore sconosciuto"
+        }`
+      );
     } finally {
       setLoading(false);
     }
@@ -196,7 +214,7 @@ export default function WorkoutDetail({
         if (workout) {
           setWorkout({
             ...workout,
-            completed: workoutCompleted
+            completed: workoutCompleted,
           });
         }
         alert("Progresso salvato con successo!");
