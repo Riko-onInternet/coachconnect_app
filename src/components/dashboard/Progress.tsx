@@ -124,7 +124,15 @@ export default function Progress() {
         setLoading(false);
         return;
       }
-
+  
+      // Chiama l'endpoint di reset prima di caricare i dati
+      await fetch(`${API_BASE_URL}/api/workouts/reset-status`, {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+  
       // Recupera i dati di progresso (peso, grasso corporeo, record personali)
       const progressResponse = await fetch(`${API_BASE_URL}/api/progress`, {
         headers: { Authorization: `Bearer ${token}` },
