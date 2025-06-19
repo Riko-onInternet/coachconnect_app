@@ -6,10 +6,12 @@ export default function Header() {
   return (
     <header className="fixed w-full bg-white/80 dark:bg-gray-900/80 backdrop-blur-sm z-50">
       <nav className="container mx-auto px-4 py-4 flex items-center justify-between">
-        <div className="flex items-center gap-2">
-          <Dumbbell />
-          <span className="text-xl font-bold">CoachConnect</span>
-        </div>
+        <Link href={"/"}>
+          <div className="flex items-center gap-2">
+            <Dumbbell />
+            <span className="text-xl font-bold">CoachConnect</span>
+          </div>
+        </Link>
         <div className="hidden sm:flex items-center gap-6">
           <Link
             href="/features"
